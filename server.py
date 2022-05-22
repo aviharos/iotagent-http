@@ -8,7 +8,17 @@ Usage:
 ./server.py host port
 or
 ./server.py
-In the latter case, localhost and port 8080 is used.
+In the latter case, localhost and port 8070 is used.
+
+The agent gets data from the IoT device in raw data, then extracts the URL,
+the headers and the HTTP method from it.
+The raw data must contain a JSON in string format.
+
+Sample payload:
+{"url": " http://localhost:1026/v2/entities/urn:ngsi_ld:TrayLoaderStorage:1/attrs/TrayLoaderStorageTrayCounter/value",
+"method": "PUT",
+"headers": ["Content-Type: text/plain"],
+"data": "100"}
 """
 
 # Standard Library imports
@@ -43,9 +53,10 @@ if conf['log_to_stdout']:
 @dataclass
 class HTTPRequest:
     url: str
-    method: str = field(default='POST')
     headers: dict
-    data_json: dict = field(default={})
+    method: str = field(default='POST')
+    type_: str = field(default='raw') # or 'json'
+    data_json: dict = field(default_factory={})
     data_raw: str = field(default='')
 
 class Server(BaseHTTPRequestHandler):
@@ -59,17 +70,17 @@ class Server(BaseHTTPRequestHandler):
         headers = {x.split(':')[0].strip(): x.split(':')[1].strip() for x in all_data['headers']}
         try:
             data_json = json.loads(all_data['data'])
-            request = HTTPRequest(url=all_data['url'], headers=headers, data_json=data_json)
-        except ValueError:
+            request = HTTPRequest(url=all_data['url'], headers=headers, type_='json', data_json=data_json)
+        except json.JSONDecodeError:
             data_raw = all_data['data']
-            request = HTTPRequest(url=all_data['url'], headers=headers, data_raw=data_raw)
+            request = HTTPRequest(url=all_data['url'], headers=headers, type_='raw', data_raw=data_raw)
         return request
     
     def send_request_to_broker(self, request):
         if request.method == 'POST':
             pass
         elif request.method == 'PUT':
-            pass
+            requests.put(url=request.url, headers=request.headers, json=request.json)
         elif request.method == 'DELETE':
             pass
 
@@ -87,18 +98,22 @@ class Server(BaseHTTPRequestHandler):
         self._set_response()
         self.wfile.write("POST request for {}".format(self.path).encode('utf-8'))
         request = self.decode_request(post_data)
+        try:
+            logger.debug(f'Request decoded:\n{request}')
+        except ValueError or KeyError as error:
+            logger.error(f'Error decoding message. Traceback:\n{error}')
         self.send_request_to_broker(request)
 
-def run(server_class=HTTPServer, handler_class=Server, address='', port=8080):
+def run(server_class=HTTPServer, handler_class=Server, address='', port=8070):
     server_address = (address, port)
     http_service = server_class(server_address, handler_class)
-    logger.info('Starting http server...\n')
+    logger.info(f'Starting http server on address {address} on port {port}...')
     try:
         http_service.serve_forever()
     except KeyboardInterrupt:
         pass
     http_service.server_close()
-    logger.info('Stopping http server...\n')
+    logger.info('KeyboardInterrupt. Stopping http server...')
 
 if __name__ == '__main__':
     if len(sys.argv) == 3:
