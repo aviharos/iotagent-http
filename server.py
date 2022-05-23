@@ -180,10 +180,11 @@ class Server(BaseHTTPRequestHandler):
                 validators.ValidationError or
                 json.JSONDecodeError) as error:
             logger.error(f'Error decoding message. Traceback:\n{error}')
+            self.wfile.write("POST request for {}\nError decoding message.\nTraceback:\n{}".format((self.path).encode('utf-8'), error))
         else:
             logger.debug(f'Request decoded:\n{request}')
             res = self.send_request_to_broker(request)
-        self.wfile.write("POST request for {}\nOrion response:{}".format((self.path).encode('utf-8'), res))
+            self.wfile.write("POST request for {}\nOrion response:{}".format((self.path).encode('utf-8'), res))
 
 
 def run(server_class=HTTPServer, handler_class=Server, port=8070):
