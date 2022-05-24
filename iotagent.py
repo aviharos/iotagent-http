@@ -65,7 +65,19 @@ class IoTAgent(BaseHTTPRequestHandler):
         self.send_response(status_code)
         self.send_header("Content-type", "text/plain")
         self.end_headers()
-        
+
+    def _handle_bad_request(self, error):
+        msg = f'Error processing request.\n{type(error).__name__}\nTraceback:\n{error}'
+        logger.error(msg)
+        self._set_response(400)
+        self.wfile.write(msg.encode('utf-8'))
+
+    def _handle_connection_error(self, error):
+        msg = f'Connection error.\n{type(error).__name__}\nTraceback:\n{error}'
+        logger.error(msg)
+        self._set_response(503)
+        self.wfile.write(msg.encode('utf-8'))
+
     def decode_request(self, post_data):
         all_data = json.loads(post_data)
         if type(all_data) is not dict:
@@ -158,16 +170,17 @@ class IoTAgent(BaseHTTPRequestHandler):
         return res
 
     def do_GET(self):
+        #TODO test
         logger.info("GET request,\nPath: %s\nHeaders:\n%s\n", str(self.path), str(self.headers))
         self._set_response(200)
-        self.wfile.write("GET request for {}".format(self.path).encode('utf-8'))
+        self.wfile.write(f'PLC IoT agent running.\nPython version: {sys.version}\validators version: {validators.__version__}'.encode('utf-8'))
 
     def do_POST(self):
         # Get the size of data
         content_length = int(self.headers['Content-Length'])
         # Gets the data itself
         post_data = self.rfile.read(content_length)
-        logger.info("POST request,\nPath: %s\nHeaders:\n%s\n\nBody:\n%s\n",
+        logger.info('POST request,\nPath: %s\nHeaders:\n%s\n\nBody:\n%s\n',
                     str(self.path), str(self.headers), post_data.decode('utf-8'))
 
         try:
@@ -177,18 +190,24 @@ class IoTAgent(BaseHTTPRequestHandler):
                 IndexError,
                 NotImplementedError,
                 validators.ValidationFailure,
-                json.JSONDecodeError) as error:
-            # TODO test
-            logger.error(f'Error decoding request.\n{type(error).__name__}\nTraceback:\n{error}')
-            self._set_response(400)
-            self.wfile.write(f'Error decoding request.\n{type(error).__name__}\nTraceback:\n{error}'.encode('utf-8'))
+                json.JSONDecodeError,
+                requests.exceptions.InvalidSchema) as error:
+            self._handle_bad_request(error)
         else:
             logger.info(f'Request decoded:\n{request}')
-            res = self.send_request_to_broker(request)
-            logger.info(f'Orion response:\n{res}')
-            self._set_response(res.status_code)
-            # TODO test
-            self.wfile.write(f'Orion response:\nstatus code: {res.status_code}\nResponse content:\n{res.content}'.encode('utf-8'))
+            try:
+                res = self.send_request_to_broker(request)
+            except (requests.exceptions.InvalidSchema,
+                    requests.exceptions.ConnectionError) as error:
+                if type(error) == requests.exceptions.InvalidSchema:
+                    self._handle_bad_request(error)
+                elif type(error) == requests.exceptions.ConnectionError:
+                    self._handle_connection_error(error)
+            else:
+                logger.info(f'Orion response:\n{res}')
+                self._set_response(res.status_code)
+                # TODO test
+                self.wfile.write(f'Orion response:\nstatus code: {res.status_code}\nResponse content:\n{res.content}'.encode('utf-8'))
 
 
 def run(server_class=HTTPServer, handler_class=IoTAgent, port=conf['port']):
