@@ -140,7 +140,7 @@ class IoTAgent(BaseHTTPRequestHandler):
         headers = {}
         for header in all_data['headers']:
             header = str(header)
-            split = header.split(':')
+            split = [x.strip() for x in header.split(':')]
             if len(split) > 2:
                 raise ValueError(f'The decoded header: "{header}" does not have a structure of\n"key: value" or "key" or contains more than one ":"')
             elif len(split) == 2:
