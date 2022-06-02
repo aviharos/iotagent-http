@@ -117,6 +117,7 @@ class IoTAgent(BaseHTTPRequestHandler):
                 name, value = header.split(':')[0].strip(), header.split(':')[1].strip()
                 headers[name] = value
         except IndexError:
+            # todo: make it handle work with a header without value
             raise IndexError(f'The decoded header: "{header}" does not have a structure of\nkey: value')
 
         if all_data['method'] in ('GET', 'DELETE'):
