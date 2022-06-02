@@ -5,7 +5,9 @@ credits to mdonkers for the server template:
 https://gist.github.com/mdonkers/63e115cc0c79b4f6b8b3a6b797e485c7
 
 Usage:
-./server.py port
+./iotagent.py
+or
+python iotagent.py
 
 The configuration can be set in conf.py
 
