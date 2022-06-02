@@ -13,11 +13,36 @@ The agent gets data from the IoT device in raw data, then extracts the URL,
 the headers and the HTTP method from it.
 The raw data must contain a JSON in string format.
 
-Sample payload:
+Sample payloads:
+Post new entity to the Orion broker
+{"url": "http://localhost:1026/v2/entities",
+"method": "POST",
+"headers": ["Content-Type: application/json"],
+"data": {
+"type": "TrayLoaderStorage",
+"id": "urn:ngsi_ld:TrayLoaderStorage:1",
+"TrayLoaderStorageCapacity": {"type": "Number", "value": 100},
+"TrayLoaderStorageTrayCounter": {"type": "Number", "value": 100}
+}}
+
+Change a numeric attribute
 {"url": "http://localhost:1026/v2/entities/urn:ngsi_ld:TrayLoaderStorage:1/attrs/TrayLoaderStorageTrayCounter/value",
 "method": "PUT",
 "headers": ["Content-Type: text/plain"],
 "data": "100"}
+
+Get an object from the Orion broker
+{"url": "http://localhost:1026/v2/entities/urn:ngsi_ld:TrayLoaderStorage:1",
+"method": "GET",
+"headers": []
+}
+
+Delete an object in the Orion broker
+{"url": "http://localhost:1026/v2/entities/urn:ngsi_ld:TrayLoaderStorage:1",
+"method": "DELETE",
+"headers": []
+}
+
 """
 
 # Standard Library imports
