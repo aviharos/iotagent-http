@@ -110,15 +110,20 @@ class IoTAgent(BaseHTTPRequestHandler):
         # raise validators.ValidationError if not valid url
         validators.url(all_data['url'])
 
-        try:
-            headers = {}
-            for header in all_data['headers']:
-                header = str(header)
-                name, value = header.split(':')[0].strip(), header.split(':')[1].strip()
+        headers = {}
+        for header in all_data['headers']:
+            header = str(header)
+            split = header.split(':')
+            if len(split) > 2:
+                raise ValueError(f'The decoded header: "{header}" does not have a structure of\n"key: value" or "key" or contains more than one ":"')
+            elif len(split) == 2:
+                name = split[0]
+                value = split[1]
                 headers[name] = value
-        except IndexError:
-            # todo: make it handle work with a header without value
-            raise IndexError(f'The decoded header: "{header}" does not have a structure of\nkey: value')
+            elif len(split) == 1:
+                # todo test this case
+                name = split[0]
+                headers[name] = None
 
         if all_data['method'] in ('GET', 'DELETE'):
             req = HTTPRequest(url=all_data['url'],
