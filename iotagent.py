@@ -105,45 +105,42 @@ class IoTAgent(BaseHTTPRequestHandler):
         self._set_response(503)
         self.wfile.write(msg.encode('utf-8'))
 
-    def decode_request(self, post_data):
-        all_data = json.loads(post_data)
-        if type(all_data) is not dict:
-            raise ValueError(f'The sent data does not contain a json:\n{post_data}')
-
+    def _clean_keys(self, all_data):
         for key in all_data.keys():
             if key != key.lower().strip():
                 all_data[key.lower().strip()] = all_data[key]
-                del all_data[key]
+                del all_data[key]        
+        return all_data
 
-        if 'method' not in all_data.keys():
-            raise KeyError(f'The decoded json:{all_data} does not include the key: \'method\'')
-        all_data['method'] = all_data['method'].upper().strip()
+    def _validate_method(self, all_data):
+        method = all_data['method'].upper().strip()
         if all_data['method'] not in ('GET', 'HEAD', 'POST', 'PUT', 'DELETE',
                                       'CONNECT', 'OPTIONS', 'TRACE'):
             raise ValueError('Not a valid HTTP method: {}'.format(all_data['method']))
-
         if all_data['method'] not in ('GET', 'POST', 'PUT', 'DELETE'):
             raise NotImplementedError('Not implemented HTTP method: {}'.format(all_data['method']))
 
+    def _validate_mandatory_keys(self, all_data):
         mandatory_keys = ['url', 'headers', 'method']
         if all_data['method'] in ('POST', 'PUT'):
             mandatory_keys.append('data')
-
         for key in mandatory_keys:
             if key not in all_data.keys():
                 raise KeyError(f'The decoded json: {all_data} does not include the key: \'{key}\'')
 
-        all_data['url'] = all_data['url'].strip()
-        # raise validators.ValidationError if not valid url
-        validators.url(all_data['url'])
-
-        headers = {}
+    def _validate_headers(self, all_data):
         for header in all_data['headers']:
             header = str(header)
             split = [x.strip() for x in header.split(':')]
             if len(split) > 2:
                 raise ValueError(f'The decoded header: "{header}" does not have a structure of\n"key: value" or "key" or contains more than one ":"')
-            elif len(split) == 2:
+
+    def _extract_headers(self, all_data):
+        headers = {}
+        for header in all_data['headers']:
+            header = str(header)
+            split = [x.strip() for x in header.split(':')]
+            if len(split) == 2:
                 name = split[0]
                 value = split[1]
                 headers[name] = value
@@ -151,59 +148,60 @@ class IoTAgent(BaseHTTPRequestHandler):
                 # todo test this case
                 name = split[0]
                 headers[name] = None
+        return headers
 
-        if all_data['method'] in ('GET', 'DELETE'):
-            req = HTTPRequest(url=all_data['url'],
-                              method=all_data['method'],
-                              headers=headers)
-            return req
+    def _validate_url(self, all_data):
+        # raise validators.ValidationError if not valid url
+        validators.url(all_data['url'])
 
-        # now the request must be either POST or PUT, require content
+    def _validate_content(self, all_data, headers):
         if 'Content-Type' not in headers.keys():
             raise ValueError('Missing header: "Content-Type: application/json" or "Content-Type: text/plain"')
-
         if headers['Content-Type'] not in ('application/json', 'text/plain'):
             raise ValueError('Unsupported Content-Type: {}\nSupported Content-Types: "application/json", "text/plain"')
-
         if headers['Content-Type'] == 'application/json':
             if type(all_data['data']) is not dict:
                 raise ValueError('Content-Type is application/json, but the data does not contain a json: {}'.format(all_data['data']))
             data = str(all_data['data']).replace('\'', '"')
-
         if headers['Content-Type'] == 'text/plain':
             # TODO test
             data = all_data['data']
             if len(data) == 0:
                 raise ValueError('The decoded request has a method {}, but has no data.'.format(all_data['method']))
 
-        headers['Content-Length'] = str(len(data))
-        req = HTTPRequest(url=all_data['url'],
-                          method=all_data['method'],
-                          headers=headers,
-                          data=data)
-        return req
+    def _construct_request(self, all_data, headers):
+        logger.debug(all_data)
+        logger.debug(type(all_data))
+        if all_data['method'] in ('GET', 'DELETE'):
+            req = HTTPRequest(url=all_data['url'],
+                              method=all_data['method'],
+                              headers=headers)
+            return req
+        elif all_data['method'] in ('POST', 'PUT'):
+            if headers['Content-Type'] == 'application/json':
+                data = str(all_data['data']).replace('\'', '"')
+            elif headers['Content-Type'] == 'text/plain':
+                data = all_data['data']
+            headers['Content-Length'] = str(len(data))
+            req = HTTPRequest(url=all_data['url'],
+                              method=all_data['method'],
+                              headers=headers,
+                              data=data)
+            return req
 
-    def send_request_to_broker(self, req):
+    def _send_request_to_broker(self, req):
         if req.method == 'GET':
-            # TODO test
             res = requests.get(url=req.url, headers=req.headers)
-
         elif req.method == 'POST':
-            # TODO test
             res = requests.post(url=req.url, headers=req.headers, data=req.data)
-                
         elif req.method == 'PUT':
             res = requests.put(url=req.url, headers=req.headers, data=req.data)
-
         elif req.method == 'DELETE':
-            # TODO test
             res = requests.delete(url=req.url, headers=req.headers)
-
         res.close()
         return res
 
     def do_GET(self):
-        #TODO test
         logger.info("GET request,\nPath: %s\nHeaders:\n%s\n", str(self.path), str(self.headers))
         self._set_response(200)
         self.wfile.write(f'PLC IoT agent running.\nPython version: {sys.version}\validators version: {validators.__version__}'.encode('utf-8'))
@@ -217,7 +215,23 @@ class IoTAgent(BaseHTTPRequestHandler):
                     str(self.path), str(self.headers), post_data.decode('utf-8'))
 
         try:
-            request = self.decode_request(post_data)
+            all_data = json.loads(post_data)
+            if type(all_data) is not dict:
+                raise ValueError(f'The sent data does not contain a json:\n{all_data}')
+            all_data = self._clean_keys(all_data)
+            if 'method' not in all_data.keys():
+                raise KeyError(f'The decoded json:{all_data} does not include the key: \'method\'')
+            all_data['method'] = all_data['method'].upper().strip()
+            self._validate_method(all_data)
+            self._validate_mandatory_keys(all_data)
+            all_data['url'] = all_data['url'].strip()
+            self._validate_url(all_data)
+            self._validate_headers(all_data)
+            headers = self._extract_headers(all_data)
+            if all_data['method'] in ('POST', 'PUT'):
+                self._validate_content(all_data, headers)
+            req = self._construct_request(all_data, headers)
+
         except (ValueError,
                 KeyError,
                 IndexError,
@@ -227,9 +241,9 @@ class IoTAgent(BaseHTTPRequestHandler):
                 requests.exceptions.InvalidSchema) as error:
             self._handle_bad_request(error)
         else:
-            logger.info(f'Request decoded:\n{request}')
+            logger.info(f'Request decoded:\n{req}')
             try:
-                res = self.send_request_to_broker(request)
+                res = self._send_request_to_broker(req)
             except (requests.exceptions.InvalidSchema,
                     requests.exceptions.ConnectionError) as error:
                 if type(error) == requests.exceptions.InvalidSchema:
@@ -239,8 +253,7 @@ class IoTAgent(BaseHTTPRequestHandler):
             else:
                 logger.info(f'Orion response:\n{res}')
                 self._set_response(res.status_code)
-                # TODO test
-                self.wfile.write(f'Orion response:\nstatus code: {res.status_code}\nResponse content:\n{res.content}'.encode('utf-8'))
+                self.wfile.write(f'{res.content}'.encode('utf-8'))
 
 
 def run(server_class=HTTPServer, handler_class=IoTAgent, port=conf['port']):
