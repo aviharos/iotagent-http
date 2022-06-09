@@ -105,39 +105,38 @@ class IoTAgent(BaseHTTPRequestHandler):
         self._set_response(503)
         self.wfile.write(msg.encode('utf-8'))
 
-    def _clean_keys(self, all_data):
-        for key in all_data.keys():
+    def _clean_keys(self, parsed_data):
+        for key in parsed_data.keys():
             if key != key.lower().strip():
-                all_data[key.lower().strip()] = all_data[key]
-                del all_data[key]        
-        return all_data
+                parsed_data[key.lower().strip()] = parsed_data[key]
+                del parsed_data[key]
+        return parsed_data
 
-    def _validate_method(self, all_data):
-        method = all_data['method'].upper().strip()
-        if all_data['method'] not in ('GET', 'HEAD', 'POST', 'PUT', 'DELETE',
-                                      'CONNECT', 'OPTIONS', 'TRACE'):
-            raise ValueError('Not a valid HTTP method: {}'.format(all_data['method']))
-        if all_data['method'] not in ('GET', 'POST', 'PUT', 'DELETE'):
-            raise NotImplementedError('Not implemented HTTP method: {}'.format(all_data['method']))
+    def _validate_method(self, parsed_data):
+        if parsed_data['method'] not in ('GET', 'HEAD', 'POST', 'PUT', 'DELETE',
+                                         'CONNECT', 'OPTIONS', 'TRACE'):
+            raise ValueError('Not a valid HTTP method: {}'.format(parsed_data['method']))
+        if parsed_data['method'] not in ('GET', 'POST', 'PUT', 'DELETE'):
+            raise NotImplementedError('Not implemented HTTP method: {}'.format(parsed_data['method']))
 
-    def _validate_mandatory_keys(self, all_data):
+    def _validate_mandatory_keys(self, parsed_data):
         mandatory_keys = ['url', 'headers', 'method']
-        if all_data['method'] in ('POST', 'PUT'):
+        if parsed_data['method'] in ('POST', 'PUT'):
             mandatory_keys.append('data')
         for key in mandatory_keys:
-            if key not in all_data.keys():
-                raise KeyError(f'The decoded json: {all_data} does not include the key: \'{key}\'')
+            if key not in parsed_data.keys():
+                raise KeyError(f'The decoded json: {parsed_data} does not include the key: \'{key}\'')
 
-    def _validate_headers(self, all_data):
-        for header in all_data['headers']:
+    def _validate_headers(self, parsed_data):
+        for header in parsed_data['headers']:
             header = str(header)
             split = [x.strip() for x in header.split(':')]
             if len(split) > 2:
                 raise ValueError(f'The decoded header: "{header}" does not have a structure of\n"key: value" or "key" or contains more than one ":"')
 
-    def _extract_headers(self, all_data):
+    def _extract_headers(self, parsed_data):
         headers = {}
-        for header in all_data['headers']:
+        for header in parsed_data['headers']:
             header = str(header)
             split = [x.strip() for x in header.split(':')]
             if len(split) == 2:
@@ -150,41 +149,41 @@ class IoTAgent(BaseHTTPRequestHandler):
                 headers[name] = None
         return headers
 
-    def _validate_url(self, all_data):
+    def _validate_url(self, parsed_data):
         # raise validators.ValidationError if not valid url
-        validators.url(all_data['url'])
+        validators.url(parsed_data['url'])
 
-    def _validate_content(self, all_data, headers):
+    def _validate_content(self, parsed_data, headers):
         if 'Content-Type' not in headers.keys():
             raise ValueError('Missing header: "Content-Type: application/json" or "Content-Type: text/plain"')
         if headers['Content-Type'] not in ('application/json', 'text/plain'):
             raise ValueError('Unsupported Content-Type: {}\nSupported Content-Types: "application/json", "text/plain"')
         if headers['Content-Type'] == 'application/json':
-            if type(all_data['data']) is not dict:
-                raise ValueError('Content-Type is application/json, but the data does not contain a json: {}'.format(all_data['data']))
-            data = str(all_data['data']).replace('\'', '"')
+            if type(parsed_data['data']) is not dict:
+                raise ValueError('Content-Type is application/json, but the data does not contain a json: {}'.format(parsed_data['data']))
+            data = str(parsed_data['data']).replace('\'', '"')
         if headers['Content-Type'] == 'text/plain':
             # TODO test
-            data = all_data['data']
+            data = parsed_data['data']
             if len(data) == 0:
-                raise ValueError('The decoded request has a method {}, but has no data.'.format(all_data['method']))
+                raise ValueError('The decoded request has a method {}, but has no data.'.format(parsed_data['method']))
 
-    def _construct_request(self, all_data, headers):
-        logger.debug(all_data)
-        logger.debug(type(all_data))
-        if all_data['method'] in ('GET', 'DELETE'):
-            req = HTTPRequest(url=all_data['url'],
-                              method=all_data['method'],
+    def _construct_request(self, parsed_data, headers):
+        logger.debug(parsed_data)
+        logger.debug(type(parsed_data))
+        if parsed_data['method'] in ('GET', 'DELETE'):
+            req = HTTPRequest(url=parsed_data['url'],
+                              method=parsed_data['method'],
                               headers=headers)
             return req
-        elif all_data['method'] in ('POST', 'PUT'):
+        elif parsed_data['method'] in ('POST', 'PUT'):
             if headers['Content-Type'] == 'application/json':
-                data = str(all_data['data']).replace('\'', '"')
+                data = str(parsed_data['data']).replace('\'', '"')
             elif headers['Content-Type'] == 'text/plain':
-                data = all_data['data']
+                data = parsed_data['data']
             headers['Content-Length'] = str(len(data))
-            req = HTTPRequest(url=all_data['url'],
-                              method=all_data['method'],
+            req = HTTPRequest(url=parsed_data['url'],
+                              method=parsed_data['method'],
                               headers=headers,
                               data=data)
             return req
@@ -215,22 +214,22 @@ class IoTAgent(BaseHTTPRequestHandler):
                     str(self.path), str(self.headers), post_data.decode('utf-8'))
 
         try:
-            all_data = json.loads(post_data)
-            if type(all_data) is not dict:
-                raise ValueError(f'The sent data does not contain a json:\n{all_data}')
-            all_data = self._clean_keys(all_data)
-            if 'method' not in all_data.keys():
-                raise KeyError(f'The decoded json:{all_data} does not include the key: \'method\'')
-            all_data['method'] = all_data['method'].upper().strip()
-            self._validate_method(all_data)
-            self._validate_mandatory_keys(all_data)
-            all_data['url'] = all_data['url'].strip()
-            self._validate_url(all_data)
-            self._validate_headers(all_data)
-            headers = self._extract_headers(all_data)
-            if all_data['method'] in ('POST', 'PUT'):
-                self._validate_content(all_data, headers)
-            req = self._construct_request(all_data, headers)
+            parsed_data = json.loads(post_data)
+            if type(parsed_data) is not dict:
+                raise ValueError(f'The sent data does not contain a json:\n{parsed_data}')
+            parsed_data = self._clean_keys(parsed_data)
+            if 'method' not in parsed_data.keys():
+                raise KeyError(f'The decoded json:{parsed_data} does not include the key: \'method\'')
+            parsed_data['method'] = parsed_data['method'].upper().strip()
+            self._validate_method(parsed_data)
+            self._validate_mandatory_keys(parsed_data)
+            parsed_data['url'] = parsed_data['url'].strip()
+            self._validate_url(parsed_data)
+            self._validate_headers(parsed_data)
+            headers = self._extract_headers(parsed_data)
+            if parsed_data['method'] in ('POST', 'PUT'):
+                self._validate_content(parsed_data, headers)
+            req = self._construct_request(parsed_data, headers)
 
         except (ValueError,
                 KeyError,
