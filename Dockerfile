@@ -2,10 +2,12 @@ FROM python:3.10.5-alpine3.16
 
 ARG USER=iotagent
 
+ARG GROUP=iotagent
+
 ENV HOME /home/$USER
 
-RUN addgroup --system $USER && \
-    adduser --system --group $USER
+RUN addgroup -S $GROUP && \
+    adduser -S $USER -G $GROUP
 
 USER $USER
 
@@ -18,7 +20,7 @@ RUN pip install --no-cache-dir --upgrade pip && \
 
 RUN rm dependencies.txt
 
-COPY iotagent/* .
+COPY iotagent/* ./
 
 ENTRYPOINT ["python3", "./iotagent.py"]
 
