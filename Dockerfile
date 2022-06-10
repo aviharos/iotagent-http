@@ -1,15 +1,15 @@
-FROM python:3.8.13-alpine3.16
+FROM python:3.10.5-alpine3.16
 
-RUN groupadd -r iotagent && \
-    useradd -g iotagent iotagent
+ARG USER=iotagent
 
-RUN mkdir -p /usr/src/iotagent
+ENV HOME /home/$USER
 
-RUN chown -R iotagent:iotagent /usr/src/iotagent
+RUN addgroup --system $USER && \
+    adduser --system --group $USER
 
-USER iotagent
+USER $USER
 
-WORKDIR /usr/src/iotagent
+WORKDIR $HOME
 
 COPY dependencies.txt ./
 
@@ -20,5 +20,5 @@ RUN rm dependencies.txt
 
 COPY iotagent/* .
 
-CMD ["python", "./iotagent.py"]
+ENTRYPOINT ["python3", "./iotagent.py"]
 
