@@ -169,8 +169,7 @@ class IoTAgent(BaseHTTPRequestHandler):
                 raise ValueError('The decoded request has a method {}, but has no data.'.format(parsed_data['method']))
 
     def _construct_request(self, parsed_data, headers):
-        logger.debug(parsed_data)
-        logger.debug(type(parsed_data))
+        logger.debug(f'Parsed data:\n{parsed_data}')
         if parsed_data['method'] in ('GET', 'DELETE'):
             req = HTTPRequest(url=parsed_data['url'],
                               method=parsed_data['method'],
@@ -258,7 +257,7 @@ class IoTAgent(BaseHTTPRequestHandler):
 def run(server_class=HTTPServer, handler_class=IoTAgent, port=conf['port']):
     server_address = ('', port)
     http_service = server_class(server_address, handler_class)
-    logger.info(f'Starting PLC IoT agent server on port {port}...')
+    logger.info(f'Starting PLC IoT agent on port {port}...')
     try:
         http_service.serve_forever()
     except KeyboardInterrupt:
