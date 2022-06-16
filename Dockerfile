@@ -1,8 +1,8 @@
 FROM python:3.7.13-alpine3.16
 
-ARG USER=iotagent
+ARG USER=appuser
 
-ARG GROUP=iotagent
+ARG GROUP=appuser
 
 ENV HOME /home/$USER
 
@@ -20,7 +20,9 @@ RUN pip install --no-cache-dir --upgrade pip && \
 
 RUN rm dependencies.txt
 
-COPY iotagent/* ./
+COPY app .
 
-ENTRYPOINT ["python3", "./iotagent.py"]
+WORKDIR $HOME/app
+
+ENTRYPOINT ["python3", "./main.py"]
 
