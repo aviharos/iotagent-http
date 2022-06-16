@@ -9,20 +9,16 @@ ENV HOME /home/$USER
 RUN addgroup -S $GROUP && \
     adduser -S $USER -G $GROUP
 
+WORKDIR $HOME/app
+
 USER $USER
 
-WORKDIR $HOME
-
-COPY dependencies.txt ./
+COPY --chown=$USER:$GROUP dependencies.txt ./
 
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r dependencies.txt
 
-RUN rm dependencies.txt
-
-COPY app .
-
-WORKDIR $HOME/app
+COPY --chown=$USER:$GROUP app/* ./
 
 ENTRYPOINT ["python3", "./main.py"]
 
