@@ -202,7 +202,7 @@ class IoTAgent(BaseHTTPRequestHandler):
     def do_GET(self):
         logger.info("GET request,\nPath: %s\nHeaders:\n%s\n", str(self.path), str(self.headers))
         self._set_response(200)
-        self.wfile.write(f'PLC IoT agent running.\nPython version: {sys.version}\validators version: {validators.__version__}'.encode('utf-8'))
+        self.wfile.write(f'PLC IoT agent running.\nPython version: {sys.version}\nvalidators version: {validators.__version__}'.encode('utf-8'))
 
     def do_POST(self):
         # Get the size of data
