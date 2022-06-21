@@ -48,17 +48,17 @@ Delete an object in the Orion broker
 """
 
 # Standard Library imports
-from dataclasses import dataclass, field
 from http.server import BaseHTTPRequestHandler, HTTPServer
 import json
 import logging
-import requests
 import sys
 
 # PyPI imports
+import requests
 import validators
 
 # custom imports
+from HTTPRequest import HTTPRequest
 from conf import conf
 
 log_levels = {'DEBUG': logging.DEBUG,
@@ -77,14 +77,6 @@ if conf['log_to_stdout']:
     stream_handler = logging.StreamHandler(sys.stdout)
     stream_handler.setFormatter(formatter)
     logger.addHandler(stream_handler)
-
-
-@dataclass
-class HTTPRequest:
-    url: str
-    headers: dict
-    method: str = field(default='GET')
-    data: str = field(default='')
 
 
 class IoTAgent(BaseHTTPRequestHandler):
@@ -150,7 +142,7 @@ class IoTAgent(BaseHTTPRequestHandler):
         return headers
 
     def _validate_url(self, parsed_data):
-        # raise validators.ValidationError if not valid url
+        # raise validators.ValidationFailure if not valid url
         validators.url(parsed_data['url'])
 
     def _validate_content(self, parsed_data, headers):
