@@ -32,7 +32,7 @@ Run component
 By default, the component uses port 8070 for communication. You can change this in [conf.py](app/conf.py). There is no configuration besides changing the port.
 
 ### Configuration - PLC
-You need to configure the PLC program to send the following data to the IoT agent using LHTTP\_Post.
+You need to configure the PLC program to send the following data to the IoT agent using LHTTP\_Post. Please note that the following data is sent as raw data, and since string variables cannot contain more than 254 characters, the string must not exceed this length.
 
 	{"url": "http://<orion-host>:<orion-port>/v2/entities",
 	"method": <HTTP method>,
