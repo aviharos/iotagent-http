@@ -7,7 +7,7 @@ A basic IoT agent for connecting Siemens S7-15xx PLCs with the [Fiware Orion Con
 - [iotagent-plc](#title)
   - [Contents](#contents)
   - [Background](#background)
-  - [Install](#install)
+  - [Build](#build)
   - [Usage](#usage)
   - [API](#api)
   - [Testing](#testing)
@@ -17,7 +17,7 @@ A basic IoT agent for connecting Siemens S7-15xx PLCs with the [Fiware Orion Con
 
 The Fiware Orion Context Broker uses HTTP connection. The Siemens S7-15xx PLCs' LHTTP Library provides HTTP functionality, but one cannot specify headers freely. Also, HTTP PUT and DELETE are not implemented in the library. This IoT agent recieves HTTP requests from the PLC, translates the HTTP request, then sends it to the Orion Context Broker. The agent waits for the Orion Context Broker's response, and returns that to the IoT device.
 
-## Install
+## Build
 The component is available as a docker image. You can build it using the Dockerfile:
 
 	docker build -t <component>:<version> .
