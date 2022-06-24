@@ -123,4 +123,4 @@ The IoT agent cannot handle HTTPS and Fiware's authentication system.
 
 ## License
 
-No license yet.
+The license is not determined yet.
