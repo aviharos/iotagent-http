@@ -205,7 +205,7 @@ class IoTAgent(BaseHTTPRequestHandler):
                     str(self.path), str(self.headers), post_data.decode('utf-8'))
 
         try:
-            parsed_data = json.loads(post_data)
+            parsed_data = json.loads(post_data).replace('\\d', '$')
             if type(parsed_data) is not dict:
                 raise ValueError(f'The sent data does not contain a json:\n{parsed_data}')
             parsed_data = self._clean_keys(parsed_data)
