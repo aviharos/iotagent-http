@@ -157,7 +157,7 @@ class IoTAgent(BaseHTTPRequestHandler):
         if headers['Content-Type'] == 'text/plain':
             # TODO test
             data = parsed_data['data']
-            if len(data) == 0:
+            if len(str(data)) == 0:
                 raise ValueError('The decoded request has a method {}, but has no data.'.format(parsed_data['method']))
 
     def _construct_request(self, parsed_data, headers):
