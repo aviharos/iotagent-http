@@ -6,4 +6,4 @@ config file for the IoT agent for PLCs
 conf = {'logging_level': 'DEBUG',
         'log_to_file': False,
         'log_to_stdout': True,
-        'port': 8070}
+        'port': 4315}
