@@ -169,9 +169,9 @@ class IoTAgent(BaseHTTPRequestHandler):
             return req
         elif parsed_data['method'] in ('POST', 'PUT'):
             if headers['Content-Type'] == 'application/json':
-                data = str(parsed_data['data']).replace('\'', '"')
+                data = str(parsed_data['data']).replace('\'', '"').replace('%24', '$')
             elif headers['Content-Type'] == 'text/plain':
-                data = parsed_data['data']
+                data = parsed_data['data'].replace('%24', '$')
             headers['Content-Length'] = str(len(data))
             req = HTTPRequest(url=parsed_data['url'],
                               method=parsed_data['method'],
@@ -205,7 +205,7 @@ class IoTAgent(BaseHTTPRequestHandler):
                     str(self.path), str(self.headers), post_data.decode('utf-8'))
 
         try:
-            parsed_data = json.loads(post_data).replace('\\d', '$')
+            parsed_data = json.loads(post_data)
             if type(parsed_data) is not dict:
                 raise ValueError(f'The sent data does not contain a json:\n{parsed_data}')
             parsed_data = self._clean_keys(parsed_data)
