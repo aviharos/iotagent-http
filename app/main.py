@@ -183,9 +183,15 @@ class IoTAgent(BaseHTTPRequestHandler):
         if req.method == 'GET':
             res = requests.get(url=req.url, headers=req.headers)
         elif req.method == 'POST':
-            res = requests.post(url=req.url, headers=req.headers, data=req.data)
+            if req.headers['Content-Type'] == 'text/plain':
+                res = requests.post(url=req.url, headers=req.headers, data=req.data)
+            if req.headers['Content-Type'] == 'application/json':
+                res = requests.post(url=req.url, headers=req.headers, json=json.loads(req.data))
         elif req.method == 'PUT':
-            res = requests.put(url=req.url, headers=req.headers, data=req.data)
+            if req.headers['Content-Type'] == 'text/plain':
+                res = requests.put(url=req.url, headers=req.headers, data=req.data)
+            if req.headers['Content-Type'] == 'application/json':
+                res = requests.put(url=req.url, headers=req.headers, json=json.loads(req.data))
         elif req.method == 'DELETE':
             res = requests.delete(url=req.url, headers=req.headers)
         res.close()
