@@ -1,10 +1,12 @@
-# iotagent-plc
+# iotagent-http
+
+[![License: MIT](https://img.shields.io/github/license/ramp-eu/TTE.project1.svg)](https://opensource.org/licenses/MIT)
 
 A basic IoT agent for connecting Siemens S7-15xx PLCs with the [Fiware Orion Context Broker](https://github.com/telefonicaid/fiware-orion). The IoT agent can also handle IoT devices that can send JSONs over HTTP POST.
 
 ## Contents
 
-- [iotagent-plc](#title)
+- [iotagent-http](#title)
   - [Contents](#contents)
   - [Background](#background)
   - [Build](#build)
