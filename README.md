@@ -126,3 +126,6 @@ The IoT agent cannot handle HTTPS and Fiware's authentication system.
 ## License
 
 [MIT license](LICENSE)
+
+The Robo4Toys TTE does not hold any copyright of any FIWARE or 3rd party software.
+
