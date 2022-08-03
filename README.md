@@ -125,4 +125,4 @@ The IoT agent cannot handle HTTPS and Fiware's authentication system.
 
 ## License
 
-The license is not determined yet.
+[MIT license](LICENSE)
