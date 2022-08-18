@@ -35,7 +35,7 @@ The software runs in a docker container. Run component
 By default, the component uses port 4315 for communication. You can change this in [conf.py](app/conf.py). There are a few configurations besides changing the port, all of which are related to logging.
 
 ### Configuration - PLC
-You need to configure the PLC program to send the data using the template below to the IoT agent using LHTTP\_Post in string format. Please note that the following data is sent as raw data, and since the PLC's string variables cannot contain more than 254 characters, the string must not exceed this length. If the data exceeds this limit, an Array of Chars must be used. However, this is not a limitation of the IoT agent. If you use an IoT device where this constraint does not exist, you can send data of arbitrary length.
+You need to configure the PLC program to send the data using the template below to the IoT agent using LHTTP\_PostPut in string format (HTTP POST request). Please note that the following data is sent as raw data, and since the PLC's string variables cannot contain more than 254 characters, the string must not exceed this length. If the data exceeds this limit, an Array of Chars must be used. However, this is not a limitation of the IoT agent. If you use an IoT device where this constraint does not exist, you can send data of arbitrary length.
 
 Sample data (string):
 
