@@ -1,0 +1,42 @@
+version: "3.5"
+services:
+
+  # Orion is the context broker
+  orion:
+    image: fiware/orion:3.6.0
+    hostname: orion
+    container_name: fiware-orion
+    depends_on:
+      - mongo-db
+    ports:
+      - "1026:1026"
+    command: -dbhost mongo-db -logLevel DEBUG -noCache
+
+  # Databases - Orion uses Mongo-DB, Cygnus is persisting to Postgres
+  mongo-db:
+    # mongo 5.0.9 works fine too, but not on all hosts
+    image: mongo:4.4.15
+    hostname: mongo-db
+    container_name: db-mongo
+    ports:
+      - "27017:27017" 
+    # command: --bind_ip_all --smallfiles
+    volumes:
+      - mongo-db:/data
+
+  iotagent-http:
+    image: iotagent-http:latest
+    hostname: iotagent-http
+    ports:
+      - "4315:4315"
+    environment:
+      - "LOGGING_LEVEL=DEBUG"
+      - "LOG_TO_FILE=true"
+      - "LOG_TO_STDOUT=true"
+      - "PORT=4315"
+      - "USE_PLUGIN=false" # set to true if you want to use the plugin
+
+
+volumes:
+  mongo-db:
+    driver: local

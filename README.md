@@ -27,9 +27,7 @@ You can build the software using the Dockerfile:
 
 ## Usage
 
-The software runs in a docker container. Run component
-
-	docker run -p 4315:4315 iotagent-http:<version>
+The [docker-compose.yml](docker-compose.yml) file shows an example of running the microservice as a docker container.
 
 ### Configuration - IoT agent
 By default, the component uses port 4315 for communication. You can change this in [conf.py](app/conf.py). There are a few configurations besides changing the port, all of which are related to logging.
