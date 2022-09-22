@@ -9,7 +9,7 @@ from urllib.parse import urlparse
 # PyPI imports
 
 # custom imports
-import Orion
+from . import Orion
 
 sys.path.insert(0, "..")
 from HTTPRequest import HTTPRequest

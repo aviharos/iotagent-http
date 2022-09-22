@@ -6,13 +6,14 @@ python main.py
 '''
 
 import unittest
+from unittest.mock import patch
 import sys
 
 # PyPI imports
 import requests
 
 sys.path.insert(0, '../app')
-from main import IoTAgent
+from main import IoTAgent, load_plugin_if_present
 from HTTPRequest import HTTPRequest
 from conf import conf
 
@@ -27,6 +28,7 @@ class TestIotAgent(unittest.TestCase):
         pass
     
     def setUp(self):
+        # TODO add transform
         self.pd_post = {"url": "http://localhost:1026/v2/entities",
                         "method": "POST",
                         "headers": ["Content-Type: application/json"],
@@ -66,6 +68,19 @@ class TestIotAgent(unittest.TestCase):
     
     def tearDown(self):
         pass
+
+    @patch('main.load_plugin_if_present.USE_PLUGIN')
+    def test_load_plugin_if_present_false(self, mock_USE_PLUGIN):
+        mock_USE_PLUGIN.return_value = False
+        transform = load_plugin_if_present()
+        self.assertEqual(transform, None)
+
+    @patch('main.load_plugin_if_present.USE_PLUGIN')
+    def test_load_plugin_if_present_false(self, mock_USE_PLUGIN):
+        mock_USE_PLUGIN.return_value = True
+        from plugin import transform as imported_transform
+        main_loaded_transform = load_plugin_if_present()
+        self.assertEqual(main_loaded_transform, imported_transform)
 
     def test_clean_keys(self):
         self.pd_post_k = self.pd_post.copy()
@@ -167,6 +182,10 @@ class TestIotAgent(unittest.TestCase):
         self.pd_post['method'] = 'INVALID'
         res = requests.post(url=f'http://localhost:{conf["port"]}', data=str(self.pd_post).replace('\'', '"'))
         self.assertEqual(res.status_code, 400)
+
+    def test__apply_plugin_if_present(self):
+        # TODO
+        pass
 
     def test_do_GET(self):
         res = requests.get(url=f'http://localhost:{conf["port"]}')

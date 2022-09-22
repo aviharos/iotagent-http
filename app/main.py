@@ -71,7 +71,18 @@ except:
     PORT = 4315
     logger.warning("Failed to convert env var PORT to int. Using default port: {PORT}")
 
+USE_PLUGIN = os.environ.get("USE_PLUGIN")
+if USE_PLUGIN is None:
+    USE_PLUGIN = False
+elif USE_PLUGIN.lower() == "true":
+    USE_PLUGIN = True
+else:
+    USE_PLUGIN = False
+
+
 def load_plugin_transform():
+    if not USE_PLUGIN:
+        return None
     transform = None
     try:
         from plugin import transform
@@ -172,6 +183,7 @@ class IoTAgent(BaseHTTPRequestHandler):
         logger.debug(f'Parsed data:\n{parsed_data}')
         if parsed_data['method'] in ('GET', 'DELETE'):
             req = HTTPRequest(url=parsed_data['url'],
+                              transform=parsed_data['transform'],
                               method=parsed_data['method'],
                               headers=headers)
             return req
@@ -182,6 +194,7 @@ class IoTAgent(BaseHTTPRequestHandler):
                 data = parsed_data['data'].replace('"dinc"', '"$inc"')
             headers['Content-Length'] = str(len(data))
             req = HTTPRequest(url=parsed_data['url'],
+                              transform=parsed_data['transform'],
                               method=parsed_data['method'],
                               headers=headers,
                               data=data)

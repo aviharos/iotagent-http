@@ -1,0 +1,7 @@
+export LOGGING_LEVEL=DEBUG
+export LOG_TO_FILE=1
+export LOG_TO_STDOUT=1
+export PORT=4315
+export USE_PLUGIN=true
+export ORION_HOST=orion
+export ORION_PORT=1026
