@@ -51,6 +51,7 @@ Delete an object in the Orion broker
 from http.server import BaseHTTPRequestHandler, HTTPServer
 import json
 import logging
+import os
 import sys
 
 # PyPI imports
@@ -58,28 +59,37 @@ import requests
 import validators
 
 # custom imports
+from Logger import getLogger
 from HTTPRequest import HTTPRequest
 from conf import conf
 
-log_levels = {'DEBUG': logging.DEBUG,
-              'INFO': logging.INFO,
-              'WARNING': logging.WARNING,
-              'ERROR': logging.ERROR,
-              'CRITICAL': logging.CRITICAL}
-logger = logging.getLogger(__name__)
-formatter = logging.Formatter('%(asctime)s:%(name)s:%(message)s')
-logger.setLevel(log_levels[conf['logging_level']])
-if conf['log_to_file']:
-    file_handler = logging.FileHandler('iotagent_plc.log')
-    file_handler.setFormatter(formatter)
-    logger.addHandler(file_handler)
-if conf['log_to_stdout']:
-    stream_handler = logging.StreamHandler(sys.stdout)
-    stream_handler.setFormatter(formatter)
-    logger.addHandler(stream_handler)
+logger = getLogger(__name__)
+
+PORT = os.environ.get("PORT")
+try:
+    PORT = int(PORT)
+    logger.info("Using port: {PORT}")
+except:
+    PORT = 4315
+    logger.warning("Failed to convert env var PORT to int. Using default port: {PORT}")
+
+def load_plugin_transform():
+    transform = None
+    try:
+        from plugin import transform
+        transform = transform
+        logger.info(f"Transform function imported from plugin")
+    except ModuleNotFoundError:
+        logger.info(f"No plugin found")
+    except (SyntaxError, IndentationError, ImportError):
+        logger.error(f"Failed to import transform function from plugin")
+    finally: 
+        return transform
 
 
 class IoTAgent(BaseHTTPRequestHandler):
+    transform = load_plugin_transform()
+
     def _set_response(self, status_code):
         self.send_response(status_code)
         self.send_header("Content-type", "text/plain")
@@ -179,6 +189,12 @@ class IoTAgent(BaseHTTPRequestHandler):
                               data=data)
             return req
 
+    def _apply_plugin_if_present(self, req):
+        if self.transform is not None:
+            req = self.transform(req)
+        else:
+            return req
+
     def _send_request_to_broker(self, req):
         if req.method == 'GET':
             res = requests.get(url=req.url, headers=req.headers)
@@ -238,6 +254,7 @@ class IoTAgent(BaseHTTPRequestHandler):
             self._handle_bad_request(error)
         else:
             logger.info(f'Request decoded:\n{req}')
+            req = self._apply_plugin_if_present(req)
             try:
                 res = self._send_request_to_broker(req)
             except (requests.exceptions.InvalidSchema,
@@ -252,10 +269,10 @@ class IoTAgent(BaseHTTPRequestHandler):
                 self.wfile.write(f'{res.content}'.encode('utf-8'))
 
 
-def run(server_class=HTTPServer, handler_class=IoTAgent, port=conf['port']):
-    server_address = ('', port)
+def run(server_class=HTTPServer, handler_class=IoTAgent):
+    server_address = ('', PORT)
     http_service = server_class(server_address, handler_class)
-    logger.info(f'Starting PLC IoT agent on port {port}...')
+    logger.info(f'Starting PLC IoT agent on port {PORT}...')
     try:
         http_service.serve_forever()
     except KeyboardInterrupt:

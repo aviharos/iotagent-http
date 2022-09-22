@@ -7,5 +7,6 @@ from dataclasses import dataclass, field
 class HTTPRequest:
     url: str
     headers: dict
+    transform: dict
     method: str = field(default='GET')
     data: str = field(default='')
