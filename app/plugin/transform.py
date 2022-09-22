@@ -7,7 +7,6 @@ import sys
 from urllib.parse import urlparse
 
 # PyPI imports
-import requests
 
 # custom imports
 import Orion

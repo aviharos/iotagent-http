@@ -50,7 +50,6 @@ Delete an object in the Orion broker
 # Standard Library imports
 from http.server import BaseHTTPRequestHandler, HTTPServer
 import json
-import logging
 import os
 import sys
 
@@ -61,7 +60,6 @@ import validators
 # custom imports
 from Logger import getLogger
 from HTTPRequest import HTTPRequest
-from conf import conf
 
 logger = getLogger(__name__)
 
