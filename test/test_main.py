@@ -5,6 +5,7 @@ The agent needs to run for some tests
 python main.py
 '''
 
+import os
 import unittest
 from unittest.mock import patch
 import sys
@@ -13,9 +14,13 @@ import sys
 import requests
 
 sys.path.insert(0, '../app')
-from main import IoTAgent, load_plugin_if_present
+from main import IoTAgent, load_plugin_transform
 from HTTPRequest import HTTPRequest
-from conf import conf
+from plugin import transform as imported_transform
+
+ORION_HOST = os.environ.get("ORION_HOST")
+ORION_PORT = os.environ.get("ORION_PORT")
+PORT = os.environ.get("PORT")
 
 
 class TestIotAgent(unittest.TestCase):
@@ -29,7 +34,7 @@ class TestIotAgent(unittest.TestCase):
     
     def setUp(self):
         # TODO add transform
-        self.pd_post = {"url": "http://localhost:1026/v2/entities",
+        self.pd_post = {"url": f"http://{ORION_HOST}:{ORION_PORT}/v2/entities",
                         "method": "POST",
                         "headers": ["Content-Type: application/json"],
                         "data": {
@@ -38,51 +43,50 @@ class TestIotAgent(unittest.TestCase):
                         "Capacity": {"type": "Number", "value": 100},
                         "Counter": {"type": "Number", "value": 100}
                         }}
-        self.pd_get = {"url": "http://localhost:1026/v2/entities/urn:ngsi_ld:Storage:1",
+        self.pd_get = {"url": f"http://{ORION_HOST}:{ORION_PORT}/v2/entities/urn:ngsi_ld:Storage:1",
                        "method": "GET",
                        "headers": []
                        }
-        self.pd_put = {"url": "http://localhost:1026/v2/entities/urn:ngsi_ld:Storage:1/attrs/Counter",
+        self.pd_put = {"url": f"http://{ORION_HOST}:{ORION_PORT}/v2/entities/urn:ngsi_ld:Storage:1/attrs/Counter",
                        "method": "PUT",
                        "headers": ["Content-Type: application/json"],
                        "data": {"value": {"$inc": -1}, "type": "Number"}}
-        self.pd_delete = {"url": "http://localhost:1026/v2/entities/urn:ngsi_ld:Storage:1",
+        self.pd_delete = {"url": f"http://{ORION_HOST}:{ORION_PORT}/v2/entities/urn:ngsi_ld:Storage:1",
                           "method": "DELETE",
                           "headers": []
                           }
         self.headers = {"Content-Type": "application/json"}
         self.req_post = HTTPRequest(url=self.pd_post['url'],
                                headers={"Content-Type": "application/json", 'Content-Length': str(len(str(self.pd_post['data'])))},
+                               transform={},
                                method=self.pd_post['method'],
                                data=str(self.pd_post['data']).replace('\'', '"'))
         self.req_put = HTTPRequest(url=self.pd_put['url'],
                               headers={"Content-Type": "application/json", 'Content-Length': str(len(str(self.pd_put['data'])))},
+                              transform={},
                               method=self.pd_put['method'],
                               data=str(self.pd_put['data']).replace('\'', '"'))
         self.req_get = HTTPRequest(url=self.pd_get['url'],
                               headers={},
+                              transform={},
                               method=self.pd_get['method'])
         self.req_delete = HTTPRequest(url=self.pd_delete['url'],
                                  headers={},
+                                 transform={},
                                  method=self.pd_delete['method'])
     
     def tearDown(self):
         pass
 
-    @patch('main.load_plugin_if_present.USE_PLUGIN')
-    def test_load_plugin_if_present_false(self, mock_USE_PLUGIN):
-        mock_USE_PLUGIN.return_value = False
-        transform = load_plugin_if_present()
+    def test_load_plugin_transform_use_plugin_false(self):
+        transform = load_plugin_transform(False)
         self.assertEqual(transform, None)
 
-    @patch('main.load_plugin_if_present.USE_PLUGIN')
-    def test_load_plugin_if_present_false(self, mock_USE_PLUGIN):
-        mock_USE_PLUGIN.return_value = True
-        from plugin import transform as imported_transform
-        main_loaded_transform = load_plugin_if_present()
+    def test_load_plugin_transform_use_plugin_true(self):
+        main_loaded_transform = load_plugin_transform(True)
         self.assertEqual(main_loaded_transform, imported_transform)
 
-    def test_clean_keys(self):
+    def test__clean_keys(self):
         self.pd_post_k = self.pd_post.copy()
         self.pd_post_k[' MethoD '] = self.pd_post['method']
         del(self.pd_post_k['method'])
@@ -157,7 +161,7 @@ class TestIotAgent(unittest.TestCase):
         with self.assertRaises(ValueError):
             IoTAgent._validate_content(IoTAgent, self.pd_post, headers)
 
-    def test_construct_request(self):
+    def test__construct_request(self):
         self.assertEqual(IoTAgent._construct_request(IoTAgent, self.pd_post, self.headers), self.req_post)
         self.assertEqual(IoTAgent._construct_request(IoTAgent, self.pd_put, self.headers), self.req_put)
         self.assertEqual(IoTAgent._construct_request(IoTAgent, self.pd_get, {}), self.req_get)
@@ -173,31 +177,36 @@ class TestIotAgent(unittest.TestCase):
         res = IoTAgent._send_request_to_broker(IoTAgent, self.req_delete)
         self.assertEqual(res.status_code, 204)
 
-    def test__handle_connection_error(self):
-        self.pd_post['url'] = "http://localhost:1027/v2/entities"
-        res = requests.post(url=f'http://localhost:{conf["port"]}', data=str(self.pd_post).replace('\'', '"'))
-        self.assertEqual(res.status_code, 503)
-
-    def test__handle_bad_request(self):
-        self.pd_post['method'] = 'INVALID'
-        res = requests.post(url=f'http://localhost:{conf["port"]}', data=str(self.pd_post).replace('\'', '"'))
-        self.assertEqual(res.status_code, 400)
-
     def test__apply_plugin_if_present(self):
         # TODO
         pass
 
-    def test_do_GET(self):
-        res = requests.get(url=f'http://localhost:{conf["port"]}')
-        self.assertEqual(res.status_code, 200)
+    # def test__handle_connection_error(self):
+    #     self.pd_post['url'] = f"http://{ORION_HOST}:1027/v2/entities"
+    #     res = requests.post(url=f'http://{ORION_HOST}:{ORION_PORT}', data=str(self.pd_post).replace('\'', '"'))
+    #     self.assertEqual(res.status_code, 503)
 
-    def test_do_POST(self):
-        res = requests.post(url=f'http://localhost:{conf["port"]}', data=str(self.pd_post).replace('\'', '"'))
-        self.assertEqual(res.status_code, 201)
-        res = requests.post(url=f'http://localhost:{conf["port"]}', data=str(self.pd_get).replace('\'', '"'))
-        self.assertEqual(res.status_code, 200)
-        res = requests.post(url=f'http://localhost:{conf["port"]}', data=str(self.pd_delete).replace('\'', '"'))
-        self.assertEqual(res.status_code, 204)
+    # def test__handle_bad_request(self):
+    #     # self.pd_post['method'] = 'INVALID'
+    #     res = IoTAgent._handle_bad_request(IoTAgent, ValueError("""Missing key: "method" """))
+    #     # res = requests.post(url=f'http://{ORION_HOST}:{PORT}', data=str(self.pd_post).replace("'", "\""))
+    #     self.assertEqual(res.status_code, 400)
+
+    # def test__set_response(self):
+    #     res = IoTAgent._set_response(IoTAgent, 200)
+    #     self.assertEqual(res.status_code, 200)
+
+    # def test_do_GET(self):
+    #     res = requests.get(url=f'http://{ORION_HOST}:{ORION_PORT}')
+    #     self.assertEqual(res.status_code, 200)
+
+    # def test_do_POST(self):
+    #     res = requests.post(url=f'http://{ORION_HOST}:{ORION_PORT}', data=str(self.pd_post).replace('\'', '"'))
+    #     self.assertEqual(res.status_code, 201)
+    #     res = requests.post(url=f'http://{ORION_HOST}:{ORION_PORT}', data=str(self.pd_get).replace('\'', '"'))
+    #     self.assertEqual(res.status_code, 200)
+    #     res = requests.post(url=f'http://{ORION_HOST}:{ORION_PORT}', data=str(self.pd_delete).replace('\'', '"'))
+    #     self.assertEqual(res.status_code, 204)
 
 
 if __name__ == '__main__':
