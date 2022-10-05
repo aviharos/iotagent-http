@@ -403,7 +403,7 @@ class IoTAgent(BaseHTTPRequestHandler):
         """HTTP GET functionality, provide healthcheck"""
         logger.info("GET request,\nPath: %s\nHeaders:\n%s\n", str(self.path), str(self.headers))
         self._set_response(200)
-        self.wfile.write(f'PLC IoT agent running.\nPython version: {sys.version}\nvalidators version: {validators.__version__}'.encode('utf-8'))
+        self.wfile.write(f'iotagent-http running.\nPython version: {sys.version}\nvalidators version: {validators.__version__}'.encode('utf-8'))
 
     def do_POST(self):
         """ Manage HTTP POST functionality 
