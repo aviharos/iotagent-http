@@ -36,7 +36,7 @@ try:
     logger.info("Using port: {PORT}")
 except:
     PORT = 4315
-    logger.warning("Failed to convert env var PORT to int. Using default port: {PORT}")
+    logger.warning(f"Failed to convert env var PORT to int. Using default port: {PORT}")
 
 USE_PLUGIN = os.environ.get("USE_PLUGIN")
 if USE_PLUGIN is None:
