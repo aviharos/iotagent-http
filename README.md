@@ -30,7 +30,9 @@ You can build the software using the Dockerfile:
 The [docker-compose.yml](docker-compose.yml) file shows an example of running the microservice as a docker container.
 
 ### Configuration - IoT agent
-By default, the component uses port 4315 for communication. You can change this in [conf.py](app/conf.py). There are a few configurations besides changing the port, all of which are related to logging.
+By default, the component uses port 4315 for communication. You can change this in [docker-compose.yml](docker-compose.yml). There are a few configurations besides changing the port, most of which are related to logging.
+
+The IoT agent can be extended with a plugin. If you wish to use your own plugin, set the `USE_PLUGIN` environment variable to "true".
 
 ### Configuration - PLC
 You need to configure the PLC program to send the data using the template below to the IoT agent using LHTTP\_PostPut in string format (HTTP POST request). Please note that the following data is sent as raw data, and since the PLC's string variables cannot contain more than 254 characters, the string must not exceed this length. If the data exceeds this limit, an Array of Chars must be used. However, this is not a limitation of the IoT agent. If you use an IoT device where this constraint does not exist, you can send data of arbitrary length.
@@ -111,9 +113,33 @@ will have equivalent effect as
 	"type": "Number"
 	}'
 
-## API
+## API - plugin support
 
-The agent does not contain an API.
+The agent does not contain an API, but it supports custom plugins. Plugins are disabled by default. You can enable it by writing your own plugin and setting `USE_PLUGIN` to "true" in the [docker-compose.yml](docker-compose.yml).
+
+You can write your own plugin. If the `USE_PLUGIN` environment variable is set to "true", the agent will try to load `plugin.transform` in the `app` directory. If it succeeds, the plugin will be used.
+
+If the `USE_PLUGIN` environment variable does not equal "true" or the agent cannot import `plugin.transform` in the `app` directory, the plugin is not used.
+
+The plugin must take an [HTTPRequest object](app/HTTPRequest.py) as the input, and return an HTTPRequest object. The plugin logic is up to the user. If the plugin needs other python packages, they need to be added to the [requirements.txt](requirements.txt). 
+
+The IoT Agent supports an optional field in the JSON object received that can be used with the plugin. The "transform" field is not used normally, but the agent will extract its value and add it to the HTTPRequest object. If the plugin is not used, the "transform" field is also not used by the agent. But if the user uses a plugin and wants to provide additional information to it, any data can be included in the "transform" field as a JSON.
+
+For example, the following is a valid request:
+
+    {
+        "url": "http://orion:1026/v2/entities",
+        "method": "PUT",
+        "headers": [],
+        "data": null,
+        "transform": {
+            "ws": "urn:ngsi_ld:Workstation:1",
+            "ct": "good",
+            "cv": 14,
+        }
+    }
+
+This way, the IoT device can pass additonal information to the plugin in the "transform" field.
 
 ## Testing
 
