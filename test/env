@@ -1,6 +1,6 @@
 export LOGGING_LEVEL=DEBUG
-export LOG_TO_FILE=1
-export LOG_TO_STDOUT=1
+export LOG_TO_FILE=false
+export LOG_TO_STDOUT=true
 export PORT=4315
 export USE_PLUGIN=false
 export ORION_HOST=localhost
