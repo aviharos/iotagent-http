@@ -27,14 +27,21 @@ services:
   iotagent-http:
     image: iotagent-http:latest
     hostname: iotagent-http
+    container_name: r4t_iotagent-http
+    restart: always
+    depends_on:
+      - orion
     ports:
       - "4315:4315"
     environment:
-      - "LOGGING_LEVEL=DEBUG"
-      - "LOG_TO_FILE=true"
-      - "LOG_TO_STDOUT=true"
-      - "PORT=4315"
-      - "USE_PLUGIN=false" # set to true if you want to use the plugin
+      LOGGING_LEVEL: "DEBUG"
+      LOG_TO_FILE: "false"
+      LOT_TO_STDOUT: "true"
+      PORT: 4315
+      USE_PLUGIN: "false"
+      ORION_HOST: "localhost"
+      ORION_PORT: 1026
+
 
 
 volumes:
