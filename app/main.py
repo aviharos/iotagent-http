@@ -316,8 +316,7 @@ class IoTAgent(BaseHTTPRequestHandler):
         """
         if self.transform is not None:
             req = self.transform(req)
-        else:
-            return req
+        return req
 
     def _send_request_to_broker(self, req: HTTPRequest):
         """Manage sending the HTTPRequest to the Orion broker

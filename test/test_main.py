@@ -5,18 +5,16 @@ The agent needs to run for some tests
 python main.py
 '''
 
+import copy
 import os
 import unittest
-from unittest.mock import patch
 import sys
-
-# PyPI imports
-import requests
 
 sys.path.insert(0, '../app')
 from main import IoTAgent, load_plugin_transform
 from HTTPRequest import HTTPRequest
 from plugin import transform as imported_transform
+from Logger import getLogger
 
 ORION_HOST = os.environ.get("ORION_HOST")
 ORION_PORT = os.environ.get("ORION_PORT")
@@ -26,7 +24,7 @@ PORT = os.environ.get("PORT")
 class TestIotAgent(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        pass
+        cls.logger = getLogger(__name__)
     
     @classmethod
     def tearDownClass(cls):
@@ -55,6 +53,17 @@ class TestIotAgent(unittest.TestCase):
                           "method": "DELETE",
                           "headers": []
                           }
+        self.pd_transform = {"url": f"http://{ORION_HOST}:{ORION_PORT}/v2/entities",
+                        "method": "POST",
+                        "headers": ["Content-Type: application/json"],
+                        "transform": {"cc": 10,
+                            "ct": "good"},
+                        "data": {
+                        "type": "Storage",
+                        "id": "urn:ngsi_ld:Storage:1",
+                        "Capacity": {"type": "Number", "value": 100},
+                        "Counter": {"type": "Number", "value": 100}
+                        }}
         self.headers = {"Content-Type": "application/json"}
         self.req_post = HTTPRequest(url=self.pd_post['url'],
                                headers={"Content-Type": "application/json", 'Content-Length': str(len(str(self.pd_post['data'])))},
@@ -74,6 +83,11 @@ class TestIotAgent(unittest.TestCase):
                                  headers={},
                                  transform={},
                                  method=self.pd_delete['method'])
+        self.req_transform = HTTPRequest(url=self.pd_post['url'],
+                               headers={"Content-Type": "application/json", 'Content-Length': str(len(str(self.pd_post['data'])))},
+                               transform=self.pd_transform["transform"],
+                               method=self.pd_post['method'],
+                               data=str(self.pd_post['data']).replace('\'', '"'))
     
     def tearDown(self):
         pass
@@ -85,6 +99,8 @@ class TestIotAgent(unittest.TestCase):
     def test_load_plugin_transform_use_plugin_true(self):
         main_loaded_transform = load_plugin_transform(True)
         self.assertEqual(main_loaded_transform, imported_transform)
+        main_loaded_transform = load_plugin_transform(False)
+        self.assertEqual(main_loaded_transform, None)
 
     def test__clean_keys(self):
         self.pd_post_k = self.pd_post.copy()
@@ -166,6 +182,7 @@ class TestIotAgent(unittest.TestCase):
         self.assertEqual(IoTAgent._construct_request(IoTAgent, self.pd_put, self.headers), self.req_put)
         self.assertEqual(IoTAgent._construct_request(IoTAgent, self.pd_get, {}), self.req_get)
         self.assertEqual(IoTAgent._construct_request(IoTAgent, self.pd_delete, {}), self.req_delete)
+        self.assertEqual(IoTAgent._construct_request(IoTAgent, self.pd_transform, self.headers), self.req_transform)
 
     def test__send_request_to_broker(self):
         res = IoTAgent._send_request_to_broker(IoTAgent, self.req_post)
@@ -178,35 +195,36 @@ class TestIotAgent(unittest.TestCase):
         self.assertEqual(res.status_code, 204)
 
     def test__apply_plugin_if_present(self):
-        # TODO
-        pass
+        """Test if the plugin is applied well. 
 
-    # def test__handle_connection_error(self):
-    #     self.pd_post['url'] = f"http://{ORION_HOST}:1027/v2/entities"
-    #     res = requests.post(url=f'http://{ORION_HOST}:{ORION_PORT}', data=str(self.pd_post).replace('\'', '"'))
-    #     self.assertEqual(res.status_code, 503)
+        We test that transform == None should not change the request.
 
-    # def test__handle_bad_request(self):
-    #     # self.pd_post['method'] = 'INVALID'
-    #     res = IoTAgent._handle_bad_request(IoTAgent, ValueError("""Missing key: "method" """))
-    #     # res = requests.post(url=f'http://{ORION_HOST}:{PORT}', data=str(self.pd_post).replace("'", "\""))
-    #     self.assertEqual(res.status_code, 400)
+        As for transform != None:
+        This function creates a copy of the IoTAgent class definition, 
+        monkey patches the transform module with a custom one 
+        that replaces "cc" with 11 in transform.
 
-    # def test__set_response(self):
-    #     res = IoTAgent._set_response(IoTAgent, 200)
-    #     self.assertEqual(res.status_code, 200)
+        Then the apply_plugi_if_present function is called and we can test 
+        if the patched transform method was properly called.
+        """
+        IoTAgent_mod = copy.deepcopy(IoTAgent)
+        IoTAgent_mod.transform = None
+        transformed = IoTAgent_mod._apply_plugin_if_present(IoTAgent_mod, self.req_transform)
+        self.assertEqual(transformed, self.req_transform)
 
-    # def test_do_GET(self):
-    #     res = requests.get(url=f'http://{ORION_HOST}:{ORION_PORT}')
-    #     self.assertEqual(res.status_code, 200)
-
-    # def test_do_POST(self):
-    #     res = requests.post(url=f'http://{ORION_HOST}:{ORION_PORT}', data=str(self.pd_post).replace('\'', '"'))
-    #     self.assertEqual(res.status_code, 201)
-    #     res = requests.post(url=f'http://{ORION_HOST}:{ORION_PORT}', data=str(self.pd_get).replace('\'', '"'))
-    #     self.assertEqual(res.status_code, 200)
-    #     res = requests.post(url=f'http://{ORION_HOST}:{ORION_PORT}', data=str(self.pd_delete).replace('\'', '"'))
-    #     self.assertEqual(res.status_code, 204)
+        def test_transform(req: HTTPRequest):
+            new_transform = req.transform
+            new_transform["cc"] = 11
+            return HTTPRequest(url = req.url,
+                    headers = req.headers,
+                    transform = new_transform,
+                    method = req.method,
+                    data = req.data)
+        IoTAgent_mod = copy.deepcopy(IoTAgent)
+        IoTAgent_mod.transform = test_transform
+        transformed = IoTAgent_mod._apply_plugin_if_present(IoTAgent_mod, self.req_transform)
+        self.assertEqual(transformed, test_transform(self.req_transform))
+        self.assertEqual(transformed.transform["cc"], 11)
 
 
 if __name__ == '__main__':

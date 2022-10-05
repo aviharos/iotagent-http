@@ -81,6 +81,7 @@ def transform(req: HTTPRequest):
         13. Return request
         """
     if req.transform == {}:
+        # do not modify a request without an empty transform field
         return req
     ws_id = req.transform["ws"]
     counter_type = req.transform["ct"]
