@@ -13,10 +13,10 @@ WORKDIR $HOME/app
 
 USER $USER
 
-COPY --chown=$USER:$GROUP dependencies.txt ./
+COPY --chown=$USER:$GROUP requirements.txt ./
 
 RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir -r dependencies.txt
+    pip install --no-cache-dir -r requirements.txt
 
 COPY --chown=$USER:$GROUP app/* ./
 
