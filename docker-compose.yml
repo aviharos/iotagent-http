@@ -39,9 +39,6 @@ services:
       LOT_TO_STDOUT: "true"
       PORT: 4315
       USE_PLUGIN: "false"
-      ORION_HOST: "localhost"
-      ORION_PORT: 1026
-
 
 
 volumes:
