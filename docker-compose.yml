@@ -34,9 +34,9 @@ services:
     ports:
       - "4315:4315"
     environment:
-      LOGGING_LEVEL: "DEBUG"
       LOG_TO_FILE: "false"
-      LOT_TO_STDOUT: "true"
+      LOG_TO_STDOUT: "true"
+      LOGGING_LEVEL: "DEBUG"
       PORT: 4315
       USE_PLUGIN: "false"
 
