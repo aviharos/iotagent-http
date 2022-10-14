@@ -20,6 +20,6 @@ class HTTPRequest:
     """
     url: str
     headers: dict
-    transform: dict
-    method: str = field(default='GET')
+    method: str
+    transform: dict = field(default_factory=lambda: {})
     data: str = field(default='')
