@@ -33,45 +33,42 @@ logger = getLogger(__name__)
 PORT = os.environ.get("PORT")
 try:
     PORT = int(PORT)
-    logger.info("Using port: {PORT}")
+    logger.info(f"Using port: {PORT}")
 except:
     PORT = 4315
     logger.warning(f"Failed to convert env var PORT to int. Using default port: {PORT}")
 
 USE_PLUGIN = os.environ.get("USE_PLUGIN")
+logger.debug(f"USE_PLUGIN: {USE_PLUGIN}")
 if USE_PLUGIN is None:
     USE_PLUGIN = False
 elif USE_PLUGIN.lower() == "true":
     USE_PLUGIN = True
 else:
     USE_PLUGIN = False
+logger.debug(f"USE_PLUGIN: {USE_PLUGIN}")
 
+"""
+A function for loading the plugin.transform module
 
-def load_plugin_transform(USE_PLUGIN):
-    """
-    A function for loading the plugin.transform module
-
-    Returns:
-        plugin.transform if 
-            - USE_PLUGIN environment variable is true (case insensitive) and
-            - the plugin.transform module can be imported
-        None otherwise
-    """
-    if not USE_PLUGIN:
-        return None
+Returns:
+    plugin.transform if 
+        - USE_PLUGIN environment variable is true (case insensitive) and
+        - the plugin.transform module can be imported
+    None otherwise
+"""
+if not USE_PLUGIN:
     transform = None
+else:
     try:
         from plugin import transform
-        transform = transform
         logger.info(f"Transform function imported from plugin")
     except ModuleNotFoundError:
         logger.info(f"No plugin found")
-        return None
+        transform = None
     except (SyntaxError, IndentationError, ImportError):
         logger.error(f"Failed to import transform function from plugin")
-        return None
-    finally: 
-        return transform
+        transform = None
 
 
 class IoTAgent(BaseHTTPRequestHandler):
@@ -87,7 +84,6 @@ class IoTAgent(BaseHTTPRequestHandler):
 
     See the README for a more in-depth explanation.
     """
-    transform = load_plugin_transform(USE_PLUGIN)
 
     def _set_response(self, status_code: int):
         """Set response based on the status_code of the HTTP Request
@@ -304,8 +300,8 @@ class IoTAgent(BaseHTTPRequestHandler):
     def _apply_plugin_if_present(self, req: HTTPRequest):
         """Apply plugin if present
 
-        If the plugin is used, self.transform is plugin.transform,
-        if the plugin is not used, self.transform is None
+        If the plugin is used, transform is plugin.transform,
+        if the plugin is not used, transform is None
         The plugin is not a part of the IoTAgent
 
         Args:
@@ -314,8 +310,10 @@ class IoTAgent(BaseHTTPRequestHandler):
         Returns:
             req (HTTPRequest)
         """
-        if self.transform is not None:
-            req = self.transform(req)
+        logger.debug(f"transform: {transform}")
+        if transform is not None:
+            req = transform(req)
+            logger.info(f"Request transformed: {req}")
         return req
 
     def _send_request_to_broker(self, req: HTTPRequest):
