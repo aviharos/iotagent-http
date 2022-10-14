@@ -143,11 +143,30 @@ This way, the IoT device can pass additonal information to the plugin in the "tr
 
 ## Testing
 
-For performing a basic end-to-end test, you have to follow the step below.
+For performing a basic end-to-end test, you have to follow the steps below.
 
-	pip install validators
+	pip install -r requirements.txt
 	cd test
+    docker-compose up -d
 	python test_main.py
+    docker-compose down
+
+Also, since some parts of the code are hard to test while not running, you shoud test the agent's functionality after running it in a docker container.
+
+    cd ..  # enter the repository's main directory
+    docker build -t iotagent-http:latest .
+    docker-compose up -d
+	cd test/test_requests
+	test_iotagent-http_connection.sh  # 1
+	create_storage.sh
+	get_storage.sh  # 2
+	decrement_storage_counter.sh
+	get_storage.sh  # 3
+	delete_storage.sh
+	get_storage.sh  # 4
+    docker-compose down
+
+After command #1, you should see a status message of the agent. After command #2, you should see the created storage. After command #3, you should see that the storage's counter is decremented by 1. After #4, you should get an error message - the storage object is deleted.
 
 ## Limitations
 The IoT agent cannot handle HTTPS and Fiware's authentication system.
