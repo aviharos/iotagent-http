@@ -3,8 +3,8 @@
 The transform function will be applied to the HTTPRequest object before sending it. 
 """
 # Standard Library imports
+import os
 import sys
-from urllib.parse import urlparse
 
 # PyPI imports
 
@@ -13,6 +13,9 @@ from . import Orion
 
 sys.path.insert(0, "..")
 from HTTPRequest import HTTPRequest
+
+ORION_HOST = os.environ.get("ORION_HOST")
+ORION_PORT = os.environ.get("ORION_PORT")
 
 
 def transform(req: HTTPRequest):
@@ -31,7 +34,7 @@ def transform(req: HTTPRequest):
     The PLC will send data packets as follows:
 
         {
-            "url": "http://orion:1026/v2/entities",
+            "url": "",
             "method": "PUT",
             "headers": [],
             "data": null,
@@ -61,6 +64,9 @@ def transform(req: HTTPRequest):
 
     PartsPerCycle: 8
     So the GoodPartCounter's real value must be 8*14 = 96
+
+    The plugin needs setting the ORION_HOST and ORION_PORT
+    environment variables.
 
     Steps:
         1. Check if the transform attribute of the HTTPRequest is empy or not
@@ -100,21 +106,18 @@ def transform(req: HTTPRequest):
     part = Orion.get(part_id)
     operation = None
     for op in part["Operations"]["value"]:
-        if op["OperationType"] == current_operation_type:
+        if op["OperationType"]["value"] == current_operation_type:
             operation = op
             break
     if operation is None:
         raise ValueError(
             f"The job's current operation is not found in the referred part.\n{job}\n{part}"
         )
-    partsPerCycle = operation["PartsPerCycle"]
+    partsPerCycle = operation["PartsPerCycle"]["value"]
     counter_value = cycle_count * partsPerCycle
-    parsed = urlparse(req.url)
-    orion_host = parsed.hostname
-    orion_port = parsed.port
-    url = f"http://{orion_host}:{orion_port}/v2/entities/{job_id}/attrs/{counter_name}/value"
+    url = f"http://{ORION_HOST}:{ORION_PORT}/v2/entities/{job_id}/attrs/{counter_name}/value"
     method = "PUT"
-    headers = ["Content-Type: text/plain"]
+    headers = {"Content-Type": "text/plain"}
     data = str(counter_value)
     transformed = HTTPRequest(url=url, method=method, headers=headers, data=data)
     return transformed
