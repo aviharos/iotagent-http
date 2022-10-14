@@ -127,17 +127,19 @@ The IoT Agent supports an optional field in the JSON object received that can be
 
 For example, the following is a valid request:
 
-    {
-        "url": "http://orion:1026/v2/entities",
+	curl --location --request POST 'http://localhost:4315' \
+    --header 'Content-Type: application/json' \
+    --data-raw '{
+        "url": "",
         "method": "PUT",
-        "headers": [],
-        "data": null,
+        "headers": ["Content-Type: application/json"],
+        "data": {},
         "transform": {
             "ws": "urn:ngsi_ld:Workstation:1",
             "ct": "good",
-            "cv": 14,
+            "cc": 14
         }
-    }
+    }'
 
 This way, the IoT device can pass additonal information to the plugin in the "transform" field.
 
