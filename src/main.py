@@ -286,9 +286,9 @@ class IoTAgent(BaseHTTPRequestHandler):
             return req
         elif parsed_data['method'] in ('POST', 'PUT'):
             if headers['Content-Type'] == 'application/json':
-                data = str(parsed_data['data']).replace('\'', '"').replace('"dinc"', '"$inc"')
+                data = str(parsed_data['data']).replace('\'', '"')
             elif headers['Content-Type'] == 'text/plain':
-                data = parsed_data['data'].replace('"dinc"', '"$inc"')
+                data = parsed_data['data']
             headers['Content-Length'] = str(len(data))
             req = HTTPRequest(url=parsed_data['url'],
                               transform= parsed_data['transform'] if "transform" in parsed_data else {},

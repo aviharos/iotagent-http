@@ -20,6 +20,8 @@ A basic IoT agent for connecting HTTP compatible IoT devices with the [Fiware Or
 
 The Fiware Orion Context Broker uses HTTP connection. The Siemens S7-15xx and S7-12xx PLCs' LHTTP Library provides HTTP functionality, but HTTP DELETE is not implemented in the library yet (as of June 2022). The LHTTP library does not natively support sending JSON objects over HTTP (as of August 2022) (note: there is a PLC library for serializing and deserializing JSON objects). This IoT agent recieves HTTP requests from the PLC in string format (`Content-Type: text/plain`), loads the JSON contained in the string, translates it to an HTTP request, then sends it to the Orion Context Broker. The agent waits for the Orion Context Broker's response, and returns that to the IoT device.
 
+Since the agent does not rely on the IoT device being a PLC, any HTTP compatible IoT device can be used with the IoT agent.
+
 ## Build
 You can build the software using the Dockerfile:
 
@@ -43,9 +45,6 @@ Sample data (string):
 	"method": <HTTP method>,
 	"headers": ["Content-Type: <content-type>"],
 	"data": <actual data in JSON or plain text format>}'
-
-#### Reserved keywords
-You cannot use the keyword `'"dinc"'`. Any instance of `'"dinc"'` will be translated to `'"$inc"'`.
 
 ### Examples
 #### DELETE
@@ -145,11 +144,12 @@ This way, the IoT device can pass additonal information to the plugin in the "tr
 
 ## Testing
 
-For performing a basic end-to-end test, you have to follow the steps below.
+For performing a basic end-to-end test, you have to follow the steps below. Please note that the tests change environment variables and Orion data, so use it at your own risk.
 
 	pip install -r requirements.txt
 	cd test
     docker-compose up -d
+    source env
 	python test_main.py
     docker-compose down
 
@@ -166,6 +166,7 @@ Also, since some parts of the code are hard to test while not running, you shoud
 	./get_storage.sh  # 3
 	./delete_storage.sh
 	./get_storage.sh  # 4
+    cd ../..
     docker-compose down
 
 After command #1, you should see a status message of the agent. After command #2, you should see the created storage. After command #3, you should see that the storage's counter is decremented by 1. After #4, you should get an error message - the storage object is deleted.

@@ -3,5 +3,5 @@ curl --location --request POST 'localhost:4315' \
 --data-raw '{"url": "http://orion:1026/v2/entities/urn:ngsi_ld:Storage:1/attrs/Counter",
 "method": "PUT",
 "headers": ["Content-Type: application/json"],
-"data": {"value": {"dinc": -1}, "type": "Number"}}
+"data": {"value": {"$inc": -1}, "type": "Number"}}
 '
