@@ -11,7 +11,7 @@ import sys
 import unittest
 
 # Custom imports
-sys.path.insert(0, "../app")
+sys.path.insert(0, "../src")
 from HTTPRequest import HTTPRequest
 from plugin import transform, Orion
 

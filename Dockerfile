@@ -18,9 +18,9 @@ COPY --chown=$USER:$GROUP requirements.txt ./
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt
 
-COPY --chown=$USER:$GROUP app/ ./app/
+COPY --chown=$USER:$GROUP src/ ./src/
 
-WORKDIR $HOME/app
+WORKDIR $HOME/src
 
 ENTRYPOINT ["python3", "./main.py"]
 
