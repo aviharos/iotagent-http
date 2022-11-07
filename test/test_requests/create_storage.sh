@@ -7,6 +7,7 @@ curl --location --request POST 'localhost:4315' \
 "type": "Storage",
 "id": "urn:ngsi_ld:Storage:1",
 "Capacity": {"type": "Number", "value": 100},
-"Counter": {"type": "Number", "value": 100}
+"Counter": {"type": "Number", "value": 100},
+"Failed": {"type": "Boolean", "value": false}
 }}
 '

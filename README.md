@@ -164,12 +164,14 @@ Also, since some parts of the code are hard to test while not running, you shoud
 	./get_storage.sh  # 2
 	./decrement_storage_counter.sh
 	./get_storage.sh  # 3
-	./delete_storage.sh
+    ./set_Failed_to_true.sh 
 	./get_storage.sh  # 4
+	./delete_storage.sh
+	./get_storage.sh  # 5
     cd ../..
     docker-compose down
 
-After command #1, you should see a status message of the agent. After command #2, you should see the created storage. After command #3, you should see that the storage's counter is decremented by 1. After #4, you should get an error message - the storage object is deleted.
+After command #1, you should see a status message of the agent. After command #2, you should see the created storage. After command #3, you should see that the storage's counter is decremented by 1. After #4, you should see that the Failed attribute is now false. After #5, you should get an error message - the storage object is deleted.
 
 ## Limitations
 The IoT agent cannot handle HTTPS and Fiware's authentication system.
