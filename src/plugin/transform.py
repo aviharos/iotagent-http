@@ -104,7 +104,7 @@ def transform(req: HTTPRequest):
     cycle_count = req.transform["cc"]
     logger.debug(f"cycle_count: {cycle_count}")
     if not Orion.exists(ws_id):
-        logger.error(f"Cannot transform request: Workstation {ws_id} does not exist")
+        logger.error(f"Error: cannot transform request: Workstation {ws_id} does not exist")
         return req
     workstation = Orion.get(ws_id)
     logger.debug(f"workstation: {workstation}")
