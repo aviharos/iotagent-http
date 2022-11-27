@@ -18,9 +18,13 @@ A basic IoT agent for connecting HTTP compatible IoT devices with the [Fiware Or
 
 ## Background
 
-The Fiware Orion Context Broker uses HTTP connection. The Siemens S7-15xx and S7-12xx PLCs' LHTTP Library provides HTTP functionality, but HTTP DELETE is not implemented in the library yet (as of June 2022). The LHTTP library does not natively support sending JSON objects over HTTP (as of August 2022) (note: there is a PLC library for serializing and deserializing JSON objects). This IoT agent recieves HTTP requests from an HTTP compatible IoT device in string format (`Content-Type: text/plain`), loads the JSON contained in the string, translates it to an HTTP request, then sends it to the Orion Context Broker. The agent waits for the Orion Context Broker's response, and returns that to the IoT device.
+The Fiware Orion Context Broker has an HTTP API. There are some IoT devices that do not support as many functions as the Orion Context Broker. For example, some devices do not support one or more of HTTP POST, PUT, DELETE or GET; or do not support sending JSONs over HTTP.
+
+This IoT agent recieves HTTP requests from an HTTP compatible IoT device in string format (`Content-Type: text/plain`), loads the JSON contained in the string, translates it to an HTTP request, then sends it to the Orion Context Broker. The agent waits for the Orion Context Broker's response, and returns that to the IoT device.
 
 Any HTTP compatible IoT device can be used with the IoT agent.
+
+Initially, the IoT agent was developed for Siemens S7-15xx PLCs. Then we did not know that these PLCs support HTTP PUT. Siemens S7-15xx and S7-12xx PLCs' LHTTP Library provides HTTP functionality, but HTTP DELETE is not implemented in the library yet (as of June 2022). The LHTTP library does not natively support sending JSON objects over HTTP (as of August 2022) (note: there is a PLC library for serializing and deserializing JSON objects).
 
 ## Build
 You can build the software using the Dockerfile:
