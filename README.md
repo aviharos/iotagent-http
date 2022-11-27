@@ -13,6 +13,7 @@ A basic IoT agent for connecting HTTP compatible IoT devices with the [Fiware Or
   - [Usage](#usage)
   - [API](#api)
   - [Testing](#testing)
+  - [Demo](#demo)
   - [Limitations](#limitations)
   - [License](#license)
 
@@ -176,6 +177,10 @@ Also, since some parts of the code are hard to test, you shoud test the agent's 
     $ docker-compose down
 
 After command #1, you should see a status message of the agent. After command #2, you should see the created storage. After command #3, you should see that the storage's counter is decremented by 1. After #4, you should see that the Failed attribute is now false. After #5, you should get an error message - the storage object is deleted.
+
+## Demo
+
+You can try the IoT agent for HTTP compatible microservice as described [here](https://github.com/aviharos/momams#try-momams-live-demo).
 
 ## Limitations
 The IoT agent cannot handle HTTPS and Fiware's authentication system.
