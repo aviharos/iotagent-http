@@ -2,7 +2,7 @@
 
 [![License: MIT](https://img.shields.io/github/license/ramp-eu/TTE.project1.svg)](https://opensource.org/licenses/MIT)
 
-A basic IoT agent for connecting HTTP compatible IoT devices with the [Fiware Orion Context Broker](https://github.com/telefonicaid/fiware-orion). Siemens S7-15xx and some of the S7-12xx PLCs are possible IoT devies to be used with the IoT agent.
+A basic IoT agent for connecting HTTP compatible IoT devices with the [Fiware Orion Context Broker](https://github.com/telefonicaid/fiware-orion). A microservice of [MOMAMS](https://github.com/aviharos/momams). Siemens S7-15xx and some of the S7-12xx PLCs are possible IoT devies to be used with the IoT agent.
 
 ## Contents
 
