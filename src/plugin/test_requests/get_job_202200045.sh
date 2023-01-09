@@ -1,1 +1,1 @@
-curl --location --request GET 'http://localhost:1026/v2/entities/urn:ngsi_ld:Job:202200045'
+curl --location --request GET 'http://localhost:1026/v2/entities/urn:ngsiv2:i40Process:Job202200045'

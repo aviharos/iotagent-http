@@ -6,7 +6,7 @@ curl --location --request POST 'http://localhost:4315' \
     "headers": ["Content-Type: application/json"],
     "data": {},
     "transform": {
-        "ws": "urn:ngsi_ld:Workstation:1",
+        "ws": "urn:ngsiv2:i40Asset:Workstation1",
         "ct": "reject",
         "cc": 11
     }

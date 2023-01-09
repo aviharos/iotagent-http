@@ -52,8 +52,8 @@ def transform(req: HTTPRequest):
     signals that good parts were created,
     the number of successful cycles so far is 14.
     The transform module needs to transform this as follows.
-    Find the Workstation's Job. Find the Job's part. Find the PartsPerCycle.
-    Multiply the counter by the PartsPerCycle value
+    Find the Workstation's Job. Find the Job's part. Find the partsPerCycle.
+    Multiply the counter by the partsPerCycle value
     to get the actual value of the Job's counter.
     Set the counter accordingly: the GoodPartCounter
     if "ct" contains "good", the RejectPartCounter otherwise.
@@ -65,7 +65,7 @@ def transform(req: HTTPRequest):
 --header 'Content-Type: text/plain' \
 --data-raw '96'
 
-    PartsPerCycle: 8
+    partsPerCycle: 8
     So the GoodPartCounter's real value must be 8*14 = 96
 
     The plugin needs setting the ORION_HOST and ORION_PORT
@@ -77,13 +77,13 @@ def transform(req: HTTPRequest):
         2. If the transform attribute of the HTTPRequest does not contain a valid Orion id,
             the transform function returns the request unchanged
         3. Get the Workstation Orion object whose id is in the transform attribute
-        4. Get the RefJob attribute
+        4. Get the refJob attribute
         5. Get the Job from Orion
-        6. Get the Job's RefPart
+        6. Get the Job's refPart
         7. Get the Part from Orion
         8. Get the Operation based on the CurrentOperationType of the Job
-        9. Get PartsPerCycle
-        10. Multiply "cc" (cycle count) by PartsPerCycle to get the Counter
+        9. Get partsPerCycle
+        10. Multiply "cc" (cycle count) by partsPerCycle to get the Counter
         11. Check if the GoodPartCounter or the RejectPartCounter
             needs to be updated (transform["ct"])
         12. Construct a HTTPRequest that updates the Job's counter.
@@ -97,9 +97,9 @@ def transform(req: HTTPRequest):
     counter_type = req.transform["ct"]
     logger.debug(f"counter_type: {counter_type}")
     if counter_type == "good":
-        counter_name = "GoodPartCounter"
+        counter_name = "goodPartCounter"
     else:
-        counter_name = "RejectPartCounter"
+        counter_name = "rejectPartCounter"
     logger.debug(f"counter_name: {counter_name}")
     cycle_count = req.transform["cc"]
     logger.debug(f"cycle_count: {cycle_count}")
@@ -108,24 +108,14 @@ def transform(req: HTTPRequest):
         return req
     workstation = Orion.get(ws_id)
     logger.debug(f"workstation: {workstation}")
-    job_id = workstation["RefJob"]["value"]
+    job_id = workstation["refJob"]["value"]
     job = Orion.get(job_id)
     logger.debug(f"job: {job}")
-    part_id = job["RefPart"]["value"]
-    current_operation_type = job["CurrentOperationType"]["value"]
-    part = Orion.get(part_id)
-    logger.debug(f"part: {part}")
-    operation = None
-    for op in part["Operations"]["value"]:
-        if op["OperationType"]["value"] == current_operation_type:
-            operation = op
-            break
-    if operation is None:
-        raise ValueError(
-            f"The job's current operation is not found in the referred part.\n{job}\n{part}"
-        )
+    # part_id = job["refPart"]["value"]
+    operation_id = job["refOperation"]["value"]
+    operation = Orion.get(operation_id)
     logger.debug(f"operation: {operation}")
-    partsPerCycle = operation["PartsPerCycle"]["value"]
+    partsPerCycle = operation["partsPerCycle"]["value"]
     logger.debug(f"partsPerCycle: {partsPerCycle}")
     counter_value = cycle_count * partsPerCycle
     logger.debug(f"counter_value: {counter_value}")
