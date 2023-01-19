@@ -14,6 +14,7 @@ A basic IoT agent for connecting HTTP compatible IoT devices with the [Fiware Or
   - [API](#api)
   - [Testing](#testing)
   - [Demo](#demo)
+  - [Troubleshooting](#troubleshooting)
   - [Limitations](#limitations)
   - [License](#license)
 
@@ -27,6 +28,10 @@ Any HTTP compatible IoT device can be used with the IoT agent.
 
 Initially, the IoT agent was developed for Siemens S7-15xx PLCs. Then we did not know that these PLCs support HTTP PUT. Siemens S7-15xx and S7-12xx PLCs' LHTTP Library provides HTTP functionality, but HTTP DELETE is not implemented in the library yet (as of June 2022). The LHTTP library does not natively support sending JSON objects over HTTP (as of August 2022) (note: there is a PLC library for serializing and deserializing JSON objects).
 
+Before reading further, it is strongly advised to read the following official Fiware tutorial:
+
+- [Getting Started](https://github.com/FIWARE/tutorials.Getting-Started).
+
 ## Build
 You can build the software using the Dockerfile:
 
@@ -37,12 +42,14 @@ You can build the software using the Dockerfile:
 The [docker-compose.yml](docker-compose.yml) file shows an example of running the microservice as a docker container.
 
 ### Configuration - IoT agent
+
 By default, the component uses port 4315 for communication. You can change this in [docker-compose.yml](docker-compose.yml). There are a few configurations besides changing the port, most of which are related to logging.
 
-The IoT agent can be extended with a plugin. If you wish to use your own plugin you wrote, place it in the `src/plugin` directory, rebuild the docker image and set the `USE_PLUGIN` environment variable to "true".
+The IoT agent can be extended with a plugin. If you wish to use your own plugin you wrote, replace the one in the `src/plugin` directory, rebuild the docker image and set the `USE_PLUGIN` environment variable to "true".
 
 ### Configuration - IoT device
-You need to configure the IoT device program to send the data using the template below to the IoT agent in raw data format (HTTP POST request).
+
+You need to configure the IoT device to send the data using the template below to the IoT agent in raw data format (HTTP POST request).
 
 Sample data (string):
 
@@ -52,7 +59,9 @@ Sample data (string):
 	"data": <actual data in JSON or plain text format>}'
 
 ### Examples
+
 #### DELETE
+
 Sending the following to the IoT agent using HTTP POST
 
 	'{"url": "http://orion:1026/v2/entities/urn:ngsi_ld:TrayLoaderStorage:1",
@@ -65,6 +74,7 @@ will have the same effect as
 	$ curl --location --request DELETE 'http://localhost:1026/v2/entities/urn:ngsi_ld:TrayLoaderStorage:1'
 
 #### GET
+
 Sending the following to the IoT agent using HTTP POST
 
 	'{"url": "http://orion:1026/v2/entities/urn:ngsi_ld:TrayLoaderStorage:1",
@@ -77,6 +87,7 @@ will have the same effect as
 	$ curl --location --request GET 'http://localhost:1026/v2/entities/urn:ngsi_ld:TrayLoaderStorage:1'
 
 #### POST
+
 Sending the following to the IoT agent using HTTP POST
 
 	'{"url": "http://orion:1026/v2/entities",
@@ -101,6 +112,7 @@ will have the same effect as
 	}'
 
 #### PUT
+
 Sending the following to the IoT agent using HTTP POST
 
 	'{"url": "http://orion:1026/v2/entities/urn:ngsi_ld:TrayLoaderStorage:1/attrs/TrayLoaderStorageTrayCounter",
@@ -182,7 +194,16 @@ After command #1, you should see a status message of the agent. After command #2
 
 You can try the IoT agent for HTTP compatible microservice as described [here](https://github.com/aviharos/momams#try-momams).
 
+## Troubleshooting
+
+If you encounter any trouble using the OEE microservice, inspect its logs:
+
+    docker logs <container name>
+
+In the default MOMAMS setup, the container name is `momams-iotagent-http`.
+
 ## Limitations
+
 The IoT agent cannot handle HTTPS and Fiware's authentication system.
 
 ## License
