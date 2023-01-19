@@ -35,7 +35,7 @@ Before reading further, it is strongly advised to read the following official Fi
 ## Build
 You can build the software using the Dockerfile:
 
-	docker build -t iotagent-http:<version> .
+	$ docker build -t iotagent-http:<version> .
 
 ## Usage
 
@@ -196,9 +196,9 @@ You can try the IoT agent for HTTP compatible microservice as described [here](h
 
 ## Troubleshooting
 
-If you encounter any trouble using the OEE microservice, inspect its logs:
+If you encounter any trouble using the iotagent-http microservice, inspect its logs:
 
-    docker logs <container name>
+    $ docker logs <container name>
 
 In the default MOMAMS setup, the container name is `momams-iotagent-http`.
 
