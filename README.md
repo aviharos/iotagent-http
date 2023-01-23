@@ -165,16 +165,16 @@ For performing a basic end-to-end test, you have to follow the steps below. Plea
 
 	$ pip install -r requirements.txt
 	$ cd test
-    $ docker-compose up -d
+    $ docker compose up -d
     $ source env
 	$ python test_main.py
-    $ docker-compose down
+    $ docker compose down
 
 Also, since some parts of the code are hard to test, you shoud test the agent's functionality after running it in a docker container.
 
     $ cd ..  # enter the repository's main directory
     $ docker build -t iotagent-http:latest .
-    $ docker-compose up -d
+    $ docker compose up -d
 	$ cd test/test_requests
 	$ ./test_iotagent-http_connection.sh  # 1
 	$ ./create_storage.sh
@@ -186,7 +186,7 @@ Also, since some parts of the code are hard to test, you shoud test the agent's 
 	$ ./delete_storage.sh
 	$ ./get_storage.sh  # 5
     $ cd ../..
-    $ docker-compose down
+    $ docker compose down
 
 After command #1, you should see a status message of the agent. After command #2, you should see the created storage. After command #3, you should see that the storage's counter is decremented by 1. After #4, you should see that the Failed attribute is now false. After #5, you should get an error message - the storage object is deleted.
 
