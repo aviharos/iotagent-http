@@ -35,7 +35,7 @@ Before reading further, it is strongly advised to read the following official Fi
 ## Build
 You can build the software using the Dockerfile:
 
-	$ docker build -t iotagent-http:<version> .
+	docker build -t iotagent-http:<version> .
 
 ## Usage
 
@@ -71,7 +71,7 @@ Sending the following to the IoT agent using HTTP POST
 
 will have the same effect as
 
-	$ curl --location --request DELETE 'http://localhost:1026/v2/entities/urn:ngsi_ld:TrayLoaderStorage:1'
+	curl --location --request DELETE 'http://localhost:1026/v2/entities/urn:ngsi_ld:TrayLoaderStorage:1'
 
 #### GET
 
@@ -84,7 +84,7 @@ Sending the following to the IoT agent using HTTP POST
 
 will have the same effect as
 
-	$ curl --location --request GET 'http://localhost:1026/v2/entities/urn:ngsi_ld:TrayLoaderStorage:1'
+	curl --location --request GET 'http://localhost:1026/v2/entities/urn:ngsi_ld:TrayLoaderStorage:1'
 
 #### POST
 
@@ -102,7 +102,7 @@ Sending the following to the IoT agent using HTTP POST
 
 will have the same effect as
 
-	$ curl --location --request POST 'http://localhost:1026/v2/entities' \
+	curl --location --request POST 'http://localhost:1026/v2/entities' \
 	--header 'Content-Type: application/json' \
 	--data-raw '{
 	"type": "TrayLoaderStorage",
@@ -122,7 +122,7 @@ Sending the following to the IoT agent using HTTP POST
 
 will have the same effect as
 
-	$ curl --location --request PUT 'http://localhost:1026/v2/entities/urn:ngsi_ld:TrayLoaderStorage:1/attrs/TrayLoaderStorageTrayCounter' \
+	curl --location --request PUT 'http://localhost:1026/v2/entities/urn:ngsi_ld:TrayLoaderStorage:1/attrs/TrayLoaderStorageTrayCounter' \
 	--header 'Content-Type: application/json' \
 	--data-raw '{
 	"value": {"$inc": -1},
@@ -143,7 +143,7 @@ The IoT Agent supports an optional field in the JSON object received that can be
 
 For example, the following is a valid request:
 
-	$ curl --location --request POST 'http://localhost:4315' \
+	curl --location --request POST 'http://localhost:4315' \
     --header 'Content-Type: application/json' \
     --data-raw '{
         "url": "",
@@ -163,30 +163,30 @@ This way, the IoT device can pass additonal information to the plugin in the "tr
 
 For performing a basic end-to-end test, you have to follow the steps below. Please note that the tests change environment variables and Orion data, so use them at your own risk.
 
-	$ pip install -r requirements.txt
-	$ cd test
-    $ docker compose up -d
-    $ source env
-	$ python test_main.py
-    $ docker compose down
+	pip install -r requirements.txt
+	cd test
+    docker compose up -d
+    source env
+	python test_main.py
+    docker compose down
 
 Also, since some parts of the code are hard to test, you shoud test the agent's functionality after running it in a docker container.
 
-    $ cd ..  # enter the repository's main directory
-    $ docker build -t iotagent-http:latest .
-    $ docker compose up -d
-	$ cd test/test_requests
-	$ ./test_iotagent-http_connection.sh  # 1
-	$ ./create_storage.sh
-	$ ./get_storage.sh  # 2
-	$ ./decrement_storage_counter.sh
-	$ ./get_storage.sh  # 3
-    $ ./set_Failed_to_true.sh 
-	$ ./get_storage.sh  # 4
-	$ ./delete_storage.sh
-	$ ./get_storage.sh  # 5
-    $ cd ../..
-    $ docker compose down
+    cd ..  # enter the repository's main directory
+    docker build -t iotagent-http:latest .
+    docker compose up -d
+	cd test/test_requests
+	./test_iotagent-http_connection.sh  # 1
+	./create_storage.sh
+	./get_storage.sh  # 2
+	./decrement_storage_counter.sh
+	./get_storage.sh  # 3
+    ./set_Failed_to_true.sh 
+	./get_storage.sh  # 4
+	./delete_storage.sh
+	./get_storage.sh  # 5
+    cd ../..
+    docker compose down
 
 After command #1, you should see a status message of the agent. After command #2, you should see the created storage. After command #3, you should see that the storage's counter is decremented by 1. After #4, you should see that the Failed attribute is now false. After #5, you should get an error message - the storage object is deleted.
 
@@ -198,7 +198,7 @@ You can try the IoT agent for HTTP compatible microservice as described [here](h
 
 If you encounter any trouble using the iotagent-http microservice, inspect its logs:
 
-    $ docker logs <container name>
+    docker logs <container name>
 
 In the default MOMAMS setup, the container name is `momams-iotagent-http`.
 
