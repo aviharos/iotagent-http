@@ -204,7 +204,7 @@ class IoTAgent(BaseHTTPRequestHandler):
             if len(split) > 2:
                 raise ValueError(f'The decoded header: "{header}" does not have a structure of\n"key: value" or "key" or contains more than one ":"')
 
-    def _extract_headers(self, parsed_data: dict):
+    def _extract_headers(self, parsed_data: dict) -> dict:
         """Extract headers from the parsed request, turn them into a dict 
 
         Args:
@@ -267,7 +267,7 @@ class IoTAgent(BaseHTTPRequestHandler):
             if len(str(data)) == 0:
                 raise ValueError('The decoded request has a method {}, but has no data.'.format(parsed_data['method']))
 
-    def _construct_request(self, parsed_data: dict, headers: dict):
+    def _construct_request(self, parsed_data: dict, headers: dict) -> HTTPRequest:
         """Construct the HTTPRequest from the parsed request
 
         Args:
@@ -294,7 +294,7 @@ class IoTAgent(BaseHTTPRequestHandler):
                               data=data)
             return req
 
-    def _apply_plugin_if_present(self, req: HTTPRequest):
+    def _apply_plugin_if_present(self, req: HTTPRequest) -> HTTPRequest:
         """Apply plugin if present
 
         If the plugin is used, transform is plugin.transform,
@@ -313,7 +313,7 @@ class IoTAgent(BaseHTTPRequestHandler):
             logger.info(f"Request transformed: {req}")
         return req
 
-    def _send_request_to_broker(self, req: HTTPRequest):
+    def _send_request_to_broker(self, req: HTTPRequest) -> requests.Response:
         """Manage sending the HTTPRequest to the Orion broker
 
         Args:
@@ -339,7 +339,7 @@ class IoTAgent(BaseHTTPRequestHandler):
         res.close()
         return res
 
-    def _prepare_request(self, post_data: str):
+    def _prepare_request(self, post_data: str) -> HTTPRequest:
         """Prepare request from post_data 
 
         Raises:
