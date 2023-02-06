@@ -21,7 +21,7 @@ ORION_HOST = os.environ.get("ORION_HOST")
 ORION_PORT = os.environ.get("ORION_PORT")
 
 
-def transform(req: HTTPRequest):
+def transform(req: HTTPRequest) -> HTTPRequest:
     """Transform a HTTPRequest object
 
     Args:
