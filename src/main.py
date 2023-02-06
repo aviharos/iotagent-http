@@ -62,12 +62,12 @@ if not USE_PLUGIN:
 else:
     try:
         from plugin import transform
-        logger.info(f"Transform function imported from plugin")
+        logger.info("Transform function imported from plugin")
     except ModuleNotFoundError:
-        logger.info(f"No plugin found")
+        logger.info("No plugin found")
         transform = None
     except (SyntaxError, IndentationError, ImportError):
-        logger.error(f"Failed to import transform function from plugin")
+        logger.error("Failed to import transform function from plugin")
         transform = None
 
 
